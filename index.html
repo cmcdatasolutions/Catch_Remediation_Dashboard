@@ -589,11 +589,14 @@
   <div class="upload-bar">
     <div class="upload-bar-label">
       📂 Data Source
-      <span>Auto-loads from source on login. Upload a local file to override.</span>
+      <span>Auto-loads from the GitHub tables (compliance_remediation/tables) on login.</span>
     </div>
 
     <button class="upload-btn" onclick="autoLoadExcel()"><i class="ti ti-refresh"></i> Reload from Source</button>
+    <button class="upload-btn" id="runCheckBtn" onclick="runComplianceCheck()" disabled style="display:none;background:#2F6B3A"
+            title="Re-run the CATCH compliance script on source_docs/ and refresh these tables"><i class="ti ti-player-play"></i> Run Compliance Check</button>
     <span class="upload-status idle" id="uploadStatus">Loading from Source…</span>
+    <span class="upload-status idle" id="runCheckStatus" style="display:none"></span>
   </div>
 
   <div class="sticky-top">
@@ -927,11 +930,23 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script>
-const BUILD_VERSION = '2026.06.17-v8-source';
+const BUILD_VERSION = '2026.10.24-run-check';
 console.log('CATCH Dashboard build:', BUILD_VERSION);
 
 // ══ CONSTANTS ════════════════════════════════════════════════════════════════
-const EXCEL_URL      = 'https://raw.githubusercontent.com/cmcdatasolutions/catch-dashboard/main/CATCH_Compliance_Dashboard.xlsx';
+// Compliance data lives as CSV tables in the private compliance_remediation repo
+// (tables/*.csv). Read through the GitHub API with the same token the
+// Remediation tab uses, so nothing about the contracts is publicly readable.
+const TABLES_OWNER  = 'cmcdatasolutions';
+const TABLES_REPO   = 'compliance_remediation';
+const TABLES_BRANCH = 'main';
+const TABLES = {
+  documents: 'tables/compliance_documents.csv',
+  gaps:      'tables/compliance_gaps.csv',
+  history:   'tables/run_history.csv',
+};
+const CHECK_WORKFLOW = 'run-compliance.yml';   // .github/workflows in TABLES_REPO
+const tableApiUrl = path => `https://api.github.com/repos/${TABLES_OWNER}/${TABLES_REPO}/contents/${path}?ref=${TABLES_BRANCH}`;
 const ACCESS_JSON_URL= 'https://raw.githubusercontent.com/cmcdatasolutions/catch-dashboard/main/catch_dashboard_access.json';
 const ACCESS_JSON_API= 'https://api.github.com/repos/cmcdatasolutions/catch-dashboard/contents/catch_dashboard_access.json';
 const GITHUB_API_URL = ACCESS_JSON_API;
@@ -1010,6 +1025,7 @@ function completeLogin(user) {
   selectedProg = (currentUser.program === 'ALL') ? 'All' : currentUser.program;
   document.getElementById('loginOverlay').style.display = 'none';
   updateUserBadge(currentUser);
+  updateRunCheckButton();
   autoLoadExcel();
 }
 
@@ -1035,6 +1051,7 @@ function updateUserBadge(user) {
 function doLogout() {
   currentUser = null; selectedProg = 'All'; selectedDoc = 'All';
   dashRecords=[]; gapsRecords=[]; historyRuns=[];
+  updateRunCheckButton(); setRunCheckStatus('idle', '');
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginBtn').disabled = false;
@@ -1044,19 +1061,111 @@ function doLogout() {
 // ══ LOAD EXCEL FROM GITHUB ═══════════════════════════════════════════════════
 // Reads the Excel produced by v8 Python script.
 // Sheet names: "Compliance Dashboard" | "Compliance Gaps" | "History"
-async function autoLoadExcel() {
+async function autoLoadExcel() {   // name kept: the "Reload from Source" button calls it
   const statusEl = document.getElementById('uploadStatus');
+  statusEl.onclick = null; statusEl.style.cursor = '';
+  const token = getGithubToken();
+  if (!token) {
+    statusEl.className = 'upload-status err';
+    statusEl.textContent = '🔗 Connect GitHub to load compliance tables (click here)';
+    statusEl.style.cursor = 'pointer';
+    statusEl.onclick = () => remGhOpenModal();
+    renderAll();
+    return;
+  }
   statusEl.className = 'upload-status idle';
-  statusEl.textContent = '⏳ Loading from Source…';
+  statusEl.textContent = '⏳ Loading tables from GitHub…';
   try {
-    const resp = await fetch(EXCEL_URL + '?nocache=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const buf = await resp.arrayBuffer();
-    processWorkbook(buf, 'Source (v8 auto-load)');
+    const fetchTable = async (path, required) => {
+      const resp = await fetch(tableApiUrl(path) + '&nocache=' + Date.now(), {
+        headers: { 'Authorization': 'Bearer ' + token,
+                   'Accept': 'application/vnd.github.raw',
+                   'X-GitHub-Api-Version': '2022-11-28' }, cache: 'no-store' });
+      if (resp.status === 401 || resp.status === 403) throw new Error('GitHub rejected the token — click Reconnect on the Remediation tab');
+      if (resp.status === 404 && !required) return [];
+      if (!resp.ok) throw new Error(`${path}: HTTP ${resp.status}`);
+      return csvToObjects(await resp.text());
+    };
+    const [docs, gaps, hist] = await Promise.all([
+      fetchTable(TABLES.documents, true), fetchTable(TABLES.gaps, false), fetchTable(TABLES.history, false)]);
+    applyComplianceData(docs, gaps, hist, `GitHub ${TABLES_REPO}/tables`);
   } catch(e) {
     statusEl.className = 'upload-status err';
-    statusEl.textContent = '✗ Could not load from Source — upload a local file to continue';
+    statusEl.textContent = '✗ Could not load tables from GitHub — ' + e.message;
+    console.error('autoLoadExcel error:', e);
     renderAll();
+  }
+}
+
+// Parses CSV text (header in row 1) into objects keyed by column name.
+// raw:true keeps values like "December 1, 2025" as text instead of dates.
+function csvToObjects(text) {
+  const wb = XLSX.read(text.replace(/^\uFEFF/, ''), {type:'string', raw:true});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(ws, {defval:'', raw:false})
+    .filter(r => Object.values(r).some(v => String(v).trim() !== ''));
+}
+
+
+// ══ RUN COMPLIANCE CHECK (GitHub Actions) ════════════════════════════════════
+// The Python script runs in GitHub Actions (scripts/catch_compliance_check.py),
+// rewrites tables/*.csv and commits them; then we reload the tables here.
+// Token needs Actions: Read and write on compliance_remediation.
+let runCheckBusy = false;
+function updateRunCheckButton() {
+  const btn = document.getElementById('runCheckBtn');
+  if (!btn) return;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  btn.style.display = isAdmin ? '' : 'none';
+  btn.disabled = !isAdmin || runCheckBusy || !getGithubToken() || !dashRecords.length;
+}
+function setRunCheckStatus(kind, html) {
+  const el = document.getElementById('runCheckStatus');
+  el.style.display = html ? '' : 'none';
+  el.className = 'upload-status ' + kind;
+  el.innerHTML = html;
+}
+async function runComplianceCheck() {
+  const token = getGithubToken();
+  if (!token || runCheckBusy) return;
+  const api = `https://api.github.com/repos/${TABLES_OWNER}/${TABLES_REPO}/actions/workflows/${CHECK_WORKFLOW}`;
+  const headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28' };
+  runCheckBusy = true; updateRunCheckButton();
+  const started = Date.now() - 15000;
+  try {
+    setRunCheckStatus('idle', '⏳ Starting compliance check…');
+    const d = await fetch(api + '/dispatches', { method: 'POST', headers,
+                          body: JSON.stringify({ ref: TABLES_BRANCH }) });
+    if (d.status === 403 || d.status === 404)
+      throw new Error('token can\'t start workflows — it needs Actions: Read and write on ' + TABLES_REPO);
+    if (!d.ok) throw new Error('GitHub returned HTTP ' + d.status);
+
+    let run = null;
+    const deadline = Date.now() + 15 * 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 5000));
+      const res = await fetch(api + '/runs?event=workflow_dispatch&per_page=5&nocache=' + Date.now(), { headers, cache: 'no-store' });
+      if (!res.ok) continue;
+      const runs = (await res.json()).workflow_runs || [];
+      run = runs.find(r => new Date(r.created_at).getTime() >= started) || run;
+      if (!run) { setRunCheckStatus('idle', '⏳ Waiting for GitHub to start the run…'); continue; }
+      const link = ` <a href="${run.html_url}" target="_blank" rel="noopener">log</a>`;
+      if (run.status !== 'completed') {
+        const mins = Math.max(0, Math.round((Date.now() - new Date(run.created_at)) / 1000));
+        setRunCheckStatus('idle', `⏳ Compliance check ${run.status.replace('_',' ')} (${mins}s)…` + link);
+        continue;
+      }
+      if (run.conclusion !== 'success') throw new Error(`run ${run.conclusion}.` + link);
+      setRunCheckStatus('ok', `✓ Compliance check finished ${new Date().toLocaleTimeString()} — tables refreshed.` + link);
+      await autoLoadExcel();
+      return;
+    }
+    throw new Error('still running after 15 minutes — check the Actions tab, then click Reload from Source');
+  } catch (e) {
+    setRunCheckStatus('err', '✗ Compliance check: ' + e.message);
+  } finally {
+    runCheckBusy = false; updateRunCheckButton();
   }
 }
 
@@ -1080,15 +1189,20 @@ function sheetToObjects(ws) {
     });
 }
 
+// Kept for loading a v8 Excel workbook; converts its sheets to rows.
 function processWorkbook(arrayBuffer, sourceName) {
+  const wb = XLSX.read(arrayBuffer, {type:'array'});
+  if (!wb.Sheets['Compliance Dashboard']) throw new Error('"Compliance Dashboard" sheet not found in Excel.');
+  applyComplianceData(sheetToObjects(wb.Sheets['Compliance Dashboard']),
+                      sheetToObjects(wb.Sheets['Compliance Gaps']),
+                      sheetToObjects(wb.Sheets['History']), sourceName);
+}
+
+// Takes row objects (one per table) and renders the Compliance tab.
+function applyComplianceData(raw1, raw2, raw3, sourceName) {
   const statusEl = document.getElementById('uploadStatus');
   try {
-    const wb = XLSX.read(arrayBuffer, {type:'array'});
-
-    // ── Sheet 1: Compliance Dashboard ────────────────────────────────────────
-    const sh1 = wb.Sheets['Compliance Dashboard'];
-    if (!sh1) throw new Error('"Compliance Dashboard" sheet not found in Excel.');
-    const raw1 = sheetToObjects(sh1);
+    // ── Table 1: compliance_documents ────────────────────────────────────────
 
     dashRecords = raw1
       .filter(r => r['#'] !== '' && !isNaN(Number(r['#'])))
@@ -1110,9 +1224,7 @@ function processWorkbook(arrayBuffer, sourceName) {
       }));
 
     // ── Sheet 2: Compliance Gaps ──────────────────────────────────────────────
-    const sh2 = wb.Sheets['Compliance Gaps'];
-    if (sh2) {
-      const raw2 = sheetToObjects(sh2);
+    if (raw2 && raw2.length) {
       gapsRecords = raw2
         .filter(r => r['#'] !== '' && !isNaN(Number(r['#'])))
         .map(r => ({
@@ -1128,9 +1240,7 @@ function processWorkbook(arrayBuffer, sourceName) {
     }
 
     // ── Sheet 3: History ─────────────────────────────────────────────────────
-    const sh3 = wb.Sheets['History'];
-    if (sh3) {
-      const raw3 = sheetToObjects(sh3);
+    if (raw3 && raw3.length) {
       historyRuns = raw3
         .filter(r => r['Run #'] !== '' && !isNaN(Number(r['Run #'])))
         .map(r => ({
@@ -1160,6 +1270,7 @@ function processWorkbook(arrayBuffer, sourceName) {
 
     statusEl.className = 'upload-status ok';
     statusEl.textContent = `✓ Loaded: ${sourceName} (${dashRecords.length} docs · ${gapsRecords.length} gaps)`;
+    updateRunCheckButton();
 
   } catch(err) {
     statusEl.className = 'upload-status err';
@@ -2075,6 +2186,7 @@ async function remGhConnectFromModal() {
   if (!val) return;
   setGithubToken(val);
   remGhCloseModal();
+  if (currentUser) autoLoadExcel();
   await remGhLoad();
   remPopulateCategoryFilter();
   remRenderAll();
