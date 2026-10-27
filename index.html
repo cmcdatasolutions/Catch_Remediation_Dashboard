@@ -512,6 +512,43 @@
 .erd-ft { font-weight: 600; white-space: nowrap; }
 .erd-acc { color: #52514e; min-width: 180px; }
 .erd-note { margin-top: 14px; font-size: 13px; color: #52514e; background: #FFF7E6; border: 1px solid #F2D9A6; border-radius: 8px; padding: 10px 14px; }
+
+/* ── Systems Map tab (admin only) — reuses the erd-* layout classes ── */
+.sm-svg { display: block; width: 100%; min-width: 820px; height: auto; font-family: Inter, "Segoe UI", Arial, sans-serif; }
+.sm-svg text { fill: #1d1d1b; }
+.sm-hub .sm-box { fill: #E8F0F8; stroke: #1F4E79; stroke-width: 2; }
+.sm-clin .sm-box { fill: #F0ECF8; stroke: #6B4FA0; stroke-width: 1.5; }
+.sm-ext .sm-box { fill: #FBF3E4; stroke: #A06A1A; stroke-width: 1.5; }
+.sm-ops .sm-box { fill: #fff; stroke: #8C8A82; stroke-width: 1.5; stroke-dasharray: 5 4; }
+.sm-title { font-weight: 700; font-size: 15px; }
+.sm-sub { font-size: 11.5px; fill: #52514e !important; }
+.sm-kind { font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.sm-hub .sm-kind { fill: #1F4E79 !important; } .sm-clin .sm-kind { fill: #6B4FA0 !important; } .sm-ext .sm-kind { fill: #A06A1A !important; } .sm-ops .sm-kind { fill: #6b6a64 !important; }
+.sm-fn { font-size: 12px; }
+.sm-e { fill: none; stroke: #2E75B6; stroke-width: 1.8; }
+.sm-e.sm-dash { stroke-dasharray: 6 5; }
+.sm-badge circle { fill: #2E75B6; }
+.sm-badge text { fill: #fff !important; font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.sm-zone { fill: none; stroke: #CBD5E1; stroke-width: 1; stroke-dasharray: 2 4; }
+.sm-zone-label { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; fill: #6b6a64 !important; }
+.sm-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 12.5px; color: #52514e; margin: 0 0 12px; }
+.sm-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sm-sw { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid; display: inline-block; }
+.sm-sw.hub { background: #E8F0F8; border-color: #1F4E79; } .sm-sw.clin { background: #F0ECF8; border-color: #6B4FA0; }
+.sm-sw.ext { background: #FBF3E4; border-color: #A06A1A; } .sm-sw.ops { background: #fff; border-color: #8C8A82; border-style: dashed; }
+.sm-ln { width: 28px; height: 0; border-top: 2px solid #2E75B6; display: inline-block; } .sm-ln.dash { border-top-style: dashed; }
+.sm-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.sm-pill.ok { color: #166534; background: #dcfce7; } .sm-pill.likely { color: #854d0e; background: #fef3c7; } .sm-pill.assumed { color: #991b1b; background: #fee2e2; }
+.sm-small { display: block; font-size: 11.5px; color: #6b6a64; margin-top: 3px; }
+.sm-vend { display: block; font-size: 12px; color: #6b6a64; font-weight: 400; }
+.sm-vendors { min-width: 1000px; } .sm-flows { min-width: 900px; }
+.sm-questions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.sm-q { background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 16px; }
+.sm-q h4 { margin: 0 0 6px; font-size: 14px; color: #1F4E79; }
+.sm-q p { margin: 0; font-size: 13px; color: #52514e; }
+.sm-sources { font-size: 12.5px; color: #52514e; margin-top: 18px; }
+.sm-sources ol { margin: 6px 0 0; padding-left: 20px; }
+.sm-sources a { color: #185FA5; }
 </style>
 </head>
 <body>
@@ -615,6 +652,7 @@
     <button class="dash-tab-btn" id="tabBtn-remediation" onclick="switchDashTab('remediation')">Remediation Tracker</button>
     <button class="dash-tab-btn" id="tabBtn-kpi" onclick="switchDashTab('kpi')">KPI Report</button>
     <button class="dash-tab-btn" id="tabBtn-erd" onclick="switchDashTab('erd')" style="display:none">ERD</button>
+    <button class="dash-tab-btn" id="tabBtn-sysmap" onclick="switchDashTab('sysmap')" style="display:none">Systems Map</button>
   </div>
   <div id="tabPanel-compliance" class="tab-panel active">
 
@@ -1263,11 +1301,135 @@
     </div>
   </div><!-- /tabPanel-erd -->
 
+  <div id="tabPanel-sysmap" class="tab-panel">
+    <div class="erd-page">
+      <div class="erd-head">
+        <h2>CATCH Systems Map — how client data moves between vendors</h2>
+        <p>Data flows between CATCH's Community Care Hub platform (Cumulus), its clinical EHR (Healthie), partners and payers, with an inventory of each vendor and connection. Items are marked confirmed, likely or assumed. Visible to admins only.</p>
+      </div>
+      <div class="sm-legend">
+        <span><i class="sm-sw hub"></i>CATCH-run system</span>
+        <span><i class="sm-sw clin"></i>Clinical platform</span>
+        <span><i class="sm-sw ext"></i>Outside party</span>
+        <span><i class="sm-sw ops"></i>Internal ops tool</span>
+        <span><i class="sm-ln"></i>Confirmed or likely</span>
+        <span><i class="sm-ln dash"></i>Assumed, needs confirming</span>
+      </div>
+      <div class="erd-scroll">
+<svg class="sm-svg" viewBox="0 0 1000 640" role="img" aria-labelledby="smTitle" xmlns="http://www.w3.org/2000/svg">
+<title id="smTitle">CATCH data flows between referral sources, members, CBO partners, Cumulus, Healthie, Harmonic Health, payers and Smartsheet</title>
+<defs><marker id="smArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2E75B6"/></marker></defs>
+<rect class="sm-zone" x="8" y="14" width="224" height="612" rx="8"/>
+<text class="sm-zone-label" x="20" y="34">COMMUNITY SIDE</text>
+<rect class="sm-zone" x="768" y="14" width="224" height="612" rx="8"/>
+<text class="sm-zone-label" x="780" y="34">CLINICAL &amp; PAYER SIDE</text>
+<path class="sm-e" d="M220,95 C290,95 300,240 360,240" marker-end="url(#smArrow)"/>
+<path class="sm-e" d="M220,320 L360,320" marker-start="url(#smArrow)" marker-end="url(#smArrow)"/>
+<path class="sm-e" d="M360,400 C300,400 290,545 220,545" marker-start="url(#smArrow)" marker-end="url(#smArrow)"/>
+<path class="sm-e" d="M640,232 C710,232 710,80 780,80" marker-end="url(#smArrow)"/>
+<path class="sm-e" d="M780,112 C730,112 720,262 640,262" marker-end="url(#smArrow)"/>
+<path class="sm-e sm-dash" d="M880,140 L880,200" marker-start="url(#smArrow)" marker-end="url(#smArrow)"/>
+<path class="sm-e" d="M640,400 C710,400 710,545 780,545" marker-end="url(#smArrow)"/>
+<path class="sm-e sm-dash" d="M500,420 L500,520" marker-end="url(#smArrow)"/>
+<path class="sm-e sm-dash" d="M930,280 L930,500" marker-end="url(#smArrow)"/>
+<g class="sm-badge"><circle cx="290" cy="160" r="11"/><text x="290" y="160">1</text></g>
+<g class="sm-badge"><circle cx="290" cy="320" r="11"/><text x="290" y="320">2</text></g>
+<g class="sm-badge"><circle cx="290" cy="480" r="11"/><text x="290" y="480">3</text></g>
+<g class="sm-badge"><circle cx="712" cy="130" r="11"/><text x="712" y="130">4</text></g>
+<g class="sm-badge"><circle cx="722" cy="210" r="11"/><text x="722" y="210">5</text></g>
+<g class="sm-badge"><circle cx="852" cy="170" r="11"/><text x="852" y="170">6</text></g>
+<g class="sm-badge"><circle cx="710" cy="470" r="11"/><text x="710" y="470">7</text></g>
+<g class="sm-badge"><circle cx="528" cy="470" r="11"/><text x="528" y="470">8</text></g>
+<g class="sm-badge"><circle cx="930" cy="390" r="11"/><text x="930" y="390">9</text></g>
+<g class="sm-ext"><rect class="sm-box" x="20" y="50" width="200" height="90" rx="8"/>
+<text class="sm-kind" x="34" y="72">OUTSIDE PARTY</text><text class="sm-title" x="34" y="94">Referral sources</text>
+<text class="sm-sub" x="34" y="113">Health systems, health plans,</text><text class="sm-sub" x="34" y="128">clinics, Area Agency on Aging</text></g>
+<g class="sm-ext"><rect class="sm-box" x="20" y="275" width="200" height="90" rx="8"/>
+<text class="sm-kind" x="34" y="297">PEOPLE SERVED</text><text class="sm-title" x="34" y="319">Members &amp; caregivers</text>
+<text class="sm-sub" x="34" y="338">Seniors, people with</text><text class="sm-sub" x="34" y="353">disabilities, family caregivers</text></g>
+<g class="sm-ext"><rect class="sm-box" x="20" y="500" width="200" height="90" rx="8"/>
+<text class="sm-kind" x="34" y="522">NETWORK</text><text class="sm-title" x="34" y="544">CBO &amp; agency partners</text>
+<text class="sm-sub" x="34" y="563">Community-based orgs and</text><text class="sm-sub" x="34" y="578">public health agencies</text></g>
+<g class="sm-hub"><rect class="sm-box" x="360" y="200" width="280" height="220" rx="10"/>
+<text class="sm-kind" x="380" y="226">CATCH COMMUNITY CARE HUB</text>
+<text class="sm-title" x="380" y="250" style="font-size:19px">Cumulus</text>
+<text class="sm-sub" x="380" y="270">Social-care system of record</text>
+<text class="sm-fn" x="380" y="298">• Intake &amp; screening</text><text class="sm-fn" x="380" y="318">• Care navigation</text>
+<text class="sm-fn" x="380" y="338">• Caregiver support</text><text class="sm-fn" x="380" y="358">• Referrals</text>
+<text class="sm-fn" x="505" y="298">• Outcome metrics</text><text class="sm-fn" x="505" y="318">• Contract billing</text>
+<text class="sm-fn" x="505" y="338">• GUIDE program</text>
+<text class="sm-sub" x="380" y="400">FHIR APIs + legacy file formats</text></g>
+<g class="sm-clin"><rect class="sm-box" x="780" y="50" width="200" height="90" rx="8"/>
+<text class="sm-kind" x="794" y="72">CLINICAL EHR</text><text class="sm-title" x="794" y="94">Healthie</text>
+<text class="sm-sub" x="794" y="113">EHR + patient engagement</text><text class="sm-sub" x="794" y="128">FHIR &amp; GraphQL APIs</text></g>
+<g class="sm-clin"><rect class="sm-box" x="780" y="200" width="200" height="80" rx="8"/>
+<text class="sm-kind" x="794" y="222">CLINICAL PARTNER?</text><text class="sm-title" x="794" y="244">Harmonic Health</text>
+<text class="sm-sub" x="794" y="263">Virtual dementia care (GUIDE)</text></g>
+<g class="sm-ext"><rect class="sm-box" x="780" y="500" width="200" height="90" rx="8"/>
+<text class="sm-kind" x="794" y="522">OUTSIDE PARTY</text><text class="sm-title" x="794" y="544">Payers</text>
+<text class="sm-sub" x="794" y="563">CMS (GUIDE), Medicare</text><text class="sm-sub" x="794" y="578">Advantage &amp; Medicaid plans</text></g>
+<g class="sm-ops"><rect class="sm-box" x="400" y="520" width="200" height="80" rx="8"/>
+<text class="sm-kind" x="414" y="542">INTERNAL OPS</text><text class="sm-title" x="414" y="564">Smartsheet</text>
+<text class="sm-sub" x="414" y="583">Tracking &amp; reporting</text></g>
+</svg>
+      </div>
+
+      <h3 class="erd-sub">Vendor inventory</h3>
+      <div class="erd-table-wrap">
+        <table class="erd-table sm-vendors">
+          <thead><tr><th>System</th><th>Role at CATCH</th><th>Main data held</th><th>Interfaces</th><th>Security / compliance</th><th>Status</th><th>To confirm</th></tr></thead>
+          <tbody>
+<tr><td class="erd-ft">Cumulus<span class="sm-vend">Cumulus Care, Inc.</span></td><td>Community Care Hub platform and system of record for social care: intake, screening, navigation, caregiver support, referrals, metrics and contract-specific billing across payer programs, including GUIDE. Payer (Vendor) data is stored here (SN 289).</td><td>Member and caregiver demographics, screenings and assessments, care plans and notes, referrals and closure status, service activity, claims and billing.</td><td>FHIR-based APIs and secure legacy formats. API link to Healthie (SN 601).</td><td>HITRUST certified. MFA required on every login.</td><td><span class="sm-pill ok">Confirmed</span><span class="sm-small">Selected Dec 2025</span></td><td>Go-live date and live modules. Who administers it at CATCH. Contract and BAA dates.</td></tr>
+<tr><td class="erd-ft">Healthie<span class="sm-vend">Healthie, Inc.</span></td><td>Clinical EHR and patient-engagement platform. Receives data from Cumulus and returns clinical results for further processing.</td><td>Clinical charting, care plans, scheduling, telehealth, intake forms, messaging.</td><td>GraphQL and FHIR APIs. Harbor marketplace of built-in and partner integrations.</td><td>ONC-certified EHR. MFA, backup and breach-detection evidence still open in the tracker.</td><td><span class="sm-pill ok">Confirmed</span><span class="sm-small">EMR per SN 1</span></td><td>Does CATCH hold its own Healthie account, or reach it through Harmonic? Which integration type connects it to Cumulus?</td></tr>
+<tr><td class="erd-ft">Harmonic Health<span class="sm-vend">Harmonic Health</span></td><td>Virtual dementia care: nurse practitioners and dementia navigators delivering CMS GUIDE care. Runs its clinical operations on Healthie.</td><td>Dementia assessments, clinical care plans, caregiver education and support records.</td><td>Through its Healthie instance.</td><td>Uses Healthie's ONC-certified platform</td><td><span class="sm-pill assumed">Assumed</span><span class="sm-small">Link to CATCH unverified</span></td><td>Is Harmonic CATCH's GUIDE clinical partner, or an alternative to Healthie? Who is the GUIDE participant of record?</td></tr>
+<tr><td class="erd-ft">Smartsheet<span class="sm-vend">Smartsheet Inc.</span></td><td>Operational tracking, program management and internal reporting.</td><td>Likely aggregate counts, task lists and project plans. May hold member-level data.</td><td>No confirmed link. Probably manual exports from Cumulus or Healthie.</td><td>Confirm plan level and whether a BAA covers any PHI</td><td><span class="sm-pill assumed">Assumed role</span></td><td>What lives in Smartsheet? Is any of it PHI? Not listed in the SN 999 application inventory.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="erd-sub">Connections</h3>
+      <div class="erd-table-wrap">
+        <table class="erd-table sm-flows">
+          <thead><tr><th>#</th><th>From → To</th><th>Data</th><th>Method</th><th>Direction</th><th>Status</th></tr></thead>
+          <tbody>
+<tr><td class="erd-n"><span>1</span></td><td class="erd-ft">Referral sources → Cumulus</td><td>Referrals and service requests: member info, reason for referral, payer program</td><td>Cumulus referral intake; secure email and secure e-fax (SN 601)</td><td>Inbound</td><td><span class="sm-pill ok">Confirmed</span></td></tr>
+<tr><td class="erd-n"><span>2</span></td><td class="erd-ft">Members &amp; caregivers ↔ Cumulus</td><td>Intake, SDOH screening, assessments, caregiver support and navigation notes</td><td>Staff data entry in Cumulus</td><td>Two-way</td><td><span class="sm-pill ok">Confirmed</span></td></tr>
+<tr><td class="erd-n"><span>3</span></td><td class="erd-ft">Cumulus ↔ CBO &amp; agency partners</td><td>Outbound referrals, service delivery updates, closed-loop status</td><td>Cumulus partner access or shared referral network</td><td>Two-way</td><td><span class="sm-pill likely">Likely</span></td></tr>
+<tr><td class="erd-n"><span>4</span></td><td class="erd-ft">Cumulus → Healthie</td><td>Data clinical partners need: demographics, screening results, navigation updates</td><td>API integration (SN 601). FHIR most likely</td><td>Push</td><td><span class="sm-pill ok">Confirmed</span></td></tr>
+<tr><td class="erd-n"><span>5</span></td><td class="erd-ft">Healthie → Cumulus</td><td>Clinical results and care-plan changes returned for further processing</td><td>Same API integration as flow 4</td><td>Pull or push</td><td><span class="sm-pill ok">Confirmed</span></td></tr>
+<tr><td class="erd-n"><span>6</span></td><td class="erd-ft">Healthie ↔ Harmonic Health</td><td>GUIDE clinical records, dementia care plans</td><td>Harmonic operates on Healthie</td><td>Two-way</td><td><span class="sm-pill assumed">Assumed</span></td></tr>
+<tr><td class="erd-n"><span>7</span></td><td class="erd-ft">Cumulus → Payers</td><td>Contract-specific claims and billing, performance metrics and outcomes</td><td>Claims files or payer portals per contract</td><td>Outbound</td><td><span class="sm-pill ok">Confirmed</span></td></tr>
+<tr><td class="erd-n"><span>8</span></td><td class="erd-ft">Cumulus / Healthie → Smartsheet</td><td>Program counts, task tracking, ad-hoc reports</td><td>Manual export / import</td><td>Outbound</td><td><span class="sm-pill assumed">Assumed</span></td></tr>
+<tr><td class="erd-n"><span>9</span></td><td class="erd-ft">Harmonic / Healthie → CMS</td><td>GUIDE model claims and reporting</td><td>Depends on who is the GUIDE participant</td><td>Outbound</td><td><span class="sm-pill assumed">Assumed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="erd-sub">Open questions</h3>
+      <div class="sm-questions">
+        <div class="sm-q"><h4>Healthie or Harmonic?</h4><p>Harmonic Health is a GUIDE dementia-care provider built on Healthie. If Harmonic is CATCH's clinical partner, flows 4–6 may be one connection.</p></div>
+        <div class="sm-q"><h4>Who bills GUIDE?</h4><p>GUIDE billing runs through Cumulus (flow 7) or the clinical partner (flow 9), depending on who is the participant of record.</p></div>
+        <div class="sm-q"><h4>What kind of API links Cumulus and Healthie?</h4><p>A Healthie Harbor partner integration or a custom FHIR / GraphQL build? What triggers each push and pull, and how often?</p></div>
+        <div class="sm-q"><h4>What is in Smartsheet?</h4><p>If member-level data lands there, confirm a BAA and access controls, and add it to the SN 999 application inventory.</p></div>
+      </div>
+      <p class="erd-note"><strong>Watch-outs:</strong> SN numbers refer to items in the Remediation Tracker. Vendor details come from public sources and should be confirmed with Cumulus and Healthie before this map is used in an assessment response.</p>
+
+      <div class="sm-sources"><strong>Sources</strong>
+        <ol>
+          <li><a href="https://cumulus.care/news/2025-12-19/houston-community-care-hub-picks-cumulus" target="_blank" rel="noopener">Houston Community Care Hub picks Cumulus (Dec 19, 2025)</a></li>
+          <li><a href="https://help.gethealthie.com/article/1166-getting-started-marketplace" target="_blank" rel="noopener">Getting Started: The Harbor by Healthie</a></li>
+          <li><a href="https://gethealthie.com/customer-success-stories" target="_blank" rel="noopener">Healthie customer stories: Harmonic Health</a></li>
+          <li><a href="https://storiicare.com/marketplace/harmonic-health" target="_blank" rel="noopener">Harmonic Health: CMS GUIDE model support</a></li>
+        </ol>
+      </div>
+    </div>
+  </div><!-- /tabPanel-sysmap -->
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script>
-const BUILD_VERSION = '2026.10.24-erd';
+const BUILD_VERSION = '2026.10.27-sysmap';
 console.log('CATCH Dashboard build:', BUILD_VERSION);
 
 // ══ CONSTANTS ════════════════════════════════════════════════════════════════
@@ -1460,6 +1622,12 @@ function updateRunCheckButton() {
   if (erdBtn) {
     erdBtn.style.display = isAdmin ? '' : 'none';
     if (!isAdmin && document.getElementById('tabPanel-erd').classList.contains('active')) switchDashTab('compliance');
+  }
+  // Systems Map tab: same admin-only rule as ERD.
+  const sysmapBtn = document.getElementById('tabBtn-sysmap');
+  if (sysmapBtn) {
+    sysmapBtn.style.display = isAdmin ? '' : 'none';
+    if (!isAdmin && document.getElementById('tabPanel-sysmap').classList.contains('active')) switchDashTab('compliance');
   }
   btn.style.display = isAdmin ? '' : 'none';
   btn.disabled = !isAdmin || runCheckBusy || !getGithubToken() || !dashRecords.length;
@@ -2182,7 +2350,7 @@ async function exportExcel() {
 
 <script>
 function switchDashTab(name) {
-  if (name === 'erd' && !(currentUser && currentUser.role === 'admin')) name = 'compliance';   // ERD is admin-only
+  if ((name === 'erd' || name === 'sysmap') && !(currentUser && currentUser.role === 'admin')) name = 'compliance';   // ERD and Systems Map are admin-only
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.dash-tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tabPanel-' + name).classList.add('active');
