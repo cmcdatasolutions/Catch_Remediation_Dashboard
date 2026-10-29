@@ -11,10 +11,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#FFFFFF;color:#1a1a1a}
+  html,body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#FFFFFF;color:#1a1a1a}
   body{display:flex;flex-direction:column;min-height:100vh}
   .header{background:linear-gradient(135deg,#1F4E79 0%,#153b5e 100%);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,30,50,.28)}
-  .sticky-top{position:sticky;top:76px;z-index:90;background:#FFFFFF;padding-top:16px;padding-bottom:16px;margin-left:-28px;margin-right:-28px;padding-left:28px;padding-right:28px;box-shadow:0 4px 10px rgba(0,0,0,.18)}
+  .sticky-top{position:sticky;top:calc(var(--hdr-h, 78px) + var(--tabs-h, 59px));z-index:90;background:#FFFFFF;padding-top:16px;padding-bottom:16px;margin-left:-28px;margin-right:-28px;padding-left:28px;padding-right:28px;box-shadow:0 4px 10px rgba(0,0,0,.18)}
   .upload-bar{background:#EFF6FF;border:1.5px dashed #185FA5;border-radius:10px;padding:12px 20px;display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
   .upload-bar-label{font-size:12px;color:#1e40af;font-weight:600;flex:1;min-width:200px}
   .upload-bar-label span{font-weight:400;color:#6b7280;font-size:11px;display:block;margin-top:2px}
@@ -380,15 +380,35 @@
 }
 
 /* Tab bar for switching between Compliance Gaps, Remediation Tracker, and KPI Report */
-.dash-tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 2px solid #E2E8F0; }
-.dash-tab-btn {
-  padding: 5px 20px; border: none; background: transparent; font-size: 13px; font-weight: 700;
-  color: #7a7256; cursor: pointer; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0;
-  margin-bottom: -2px; transition: all .15s;
+.dash-tabs {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  position: sticky; top: var(--hdr-h, 78px); z-index: 95;
+  background: #fff; margin: 0 -28px 18px; padding: 12px 28px;
+  border-bottom: 1px solid #E2E8F0; box-shadow: 0 4px 10px -6px rgba(15,30,50,.25);
 }
-.dash-tab-btn:hover { color: #185FA5; background: rgba(24,95,165,.06); }
-.dash-tab-btn.active { color: #1F4E79; border-bottom-color: #1F4E79; background: #fff; box-shadow: 0 -1px 3px rgba(31,78,121,.06); }
+.dash-tab-btn {
+  --tab: #1F4E79;
+  padding: 8px 18px; border: 1px solid rgba(0,0,0,.25); border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tab) 78%, #fff) 0%, var(--tab) 55%, color-mix(in srgb, var(--tab) 82%, #000) 100%);
+  color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .01em; cursor: pointer;
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  text-shadow: 0 1px 1px rgba(0,0,0,.35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(0,0,0,.25), 0 2px 4px rgba(15,30,50,.22);
+  opacity: .82; transition: transform .12s, box-shadow .12s, opacity .12s, filter .12s;
+}
+.dash-tab-btn:hover { opacity: 1; filter: brightness(1.08); transform: translateY(-1px); }
+.dash-tab-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.dash-tab-btn.active {
+  opacity: 1; transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.2), 0 0 0 2px #fff, 0 0 0 4px var(--tab);
+}
+#tabBtn-compliance  { --tab: #1F4E79; }
+#tabBtn-remediation { --tab: #0E7C86; }
+#tabBtn-kpi         { --tab: #6B4FA0; }
+#tabBtn-vendor      { --tab: #2E7D32; }
+#tabBtn-erd         { --tab: #B5542B; }
+#tabBtn-sysmap      { --tab: #8A2D5C; }
+@media (max-width:600px){ .dash-tabs { gap: 6px; padding: 8px 28px; margin: 0 -28px 14px; } .dash-tab-btn { padding: 7px 11px; font-size: 12px; } }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
@@ -399,7 +419,7 @@
    + an 18px negative margin, plus 10px trimmed from the shared tab-bar's own
    height above it (see .dash-tab-btn) so the report ends flush against the tab
    bar with no visual overlap. */
-.viz-root.kpi-page { padding-top: 0; margin-top: -18px; }
+.viz-root.kpi-page { padding-top: 0; margin-top: -4px; }
 
 /* Title banner, styled after the reference KPI-overview layout */
 .viz-root .kpi-banner {
@@ -549,6 +569,108 @@
 .sm-sources { font-size: 12.5px; color: #52514e; margin-top: 18px; }
 .sm-sources ol { margin: 6px 0 0; padding-left: 20px; }
 .sm-sources a { color: #185FA5; }
+
+/* ============ Vendor Compliance tab (scoped under .vc-root) ============ */
+#tabPanel-vendor.active { background:#FFF3EA; border:1px solid #F6DCC8; border-radius:14px; padding:24px 24px 28px; }
+#tabPanel-vendor .vc-tile, #tabPanel-vendor .vc-list, #tabPanel-vendor .vc-detail { border-color:#F0D6C2; box-shadow:0 1px 3px rgba(120,70,30,.08); }
+@media (max-width:600px){ #tabPanel-vendor.active { padding:16px 12px; } }
+.vc-root #vcNotes { background:#EAF7EC; border:1px solid #9FD3AC; }
+.vc-root #vcNotes:focus { background:#F2FBF3; outline:2px solid #4CAF6A; outline-offset:1px; }
+.vc-root #vcNotes::placeholder { color:#5f7d66; }
+#tabPanel-vendor .vc-drop { background:#1E7B3A; border:1.5px solid #1E7B3A; color:#fff; padding:16px; }
+#tabPanel-vendor .vc-drop strong { color:#fff; }
+#tabPanel-vendor .vc-drop span { color:rgba(255,255,255,.85) !important; }
+#tabPanel-vendor .vc-drop:hover, #tabPanel-vendor .vc-drop.over { background:#16612D; border-color:#16612D; }
+.vc-root { --vc-ink:#0f172a; --vc-sub:#475569; --vc-mute:#94a3b8; --vc-line:#e2e8f0; --vc-soft:#f8fafc;
+  --vc-blue:#1F4E79; --vc-blue2:#185FA5; --vc-good:#0a7d32; --vc-good-bg:#e7f6ec; --vc-warn:#8a5a00; --vc-warn-bg:#fff4d6;
+  color:var(--vc-ink); font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+.vc-root *, .vc-root *::before, .vc-root *::after { box-sizing:border-box; }
+.vc-root .vc-head { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between; margin-bottom:16px; }
+.vc-root .vc-head h1 { font-size:21px; margin:0 0 4px; letter-spacing:-.01em; }
+.vc-root .vc-head p { margin:0; font-size:13px; color:var(--vc-sub); max-width:640px; line-height:1.5; }
+.vc-root .vc-vendor { display:flex; flex-direction:column; gap:4px; min-width:220px; }
+.vc-root .vc-vendor label, .vc-root .vc-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--vc-mute); }
+.vc-root select, .vc-root input[type=search], .vc-root textarea {
+  font:inherit; font-size:13px; color:var(--vc-ink); background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px; }
+.vc-root .vc-vendor select { font-size:15px; font-weight:700; padding:9px 12px; border-color:var(--vc-blue2); }
+.vc-root select:focus, .vc-root input:focus, .vc-root textarea:focus { outline:2px solid #93c5fd; outline-offset:1px; }
+.vc-root .vc-tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+.vc-root .vc-tile { background:#fff; border:1px solid var(--vc-line); border-radius:10px; padding:12px 16px; position:relative; overflow:hidden; }
+.vc-root .vc-tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--vc-blue2); }
+.vc-root .vc-tile.good::before { background:var(--vc-good); } .vc-root .vc-tile.warn::before { background:#fab219; } .vc-root .vc-tile.ev::before { background:#7c3aed; }
+.vc-root .vc-tile .k { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--vc-mute); }
+.vc-root .vc-tile .v { font-size:26px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; }
+.vc-root .vc-tile .s { font-size:12px; color:var(--vc-sub); margin-top:2px; }
+.vc-root .vc-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+.vc-root .vc-bar input[type=search] { flex:1; min-width:180px; }
+.vc-root .vc-spacer { flex:1; }
+.vc-root .vc-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid #cbd5e1; background:#fff;
+  color:var(--vc-ink); font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.vc-root .vc-btn:hover:not(:disabled) { background:var(--vc-soft); border-color:#94a3b8; }
+.vc-root .vc-btn:disabled { opacity:.45; cursor:not-allowed; }
+.vc-root .vc-btn.primary { background:var(--vc-blue2); border-color:var(--vc-blue2); color:#fff; }
+.vc-root .vc-btn.primary:hover:not(:disabled) { background:#0C447C; }
+.vc-root .vc-btn.good { background:var(--vc-good); border-color:var(--vc-good); color:#fff; }
+.vc-root .vc-status { font-size:12px; padding:5px 10px; border-radius:999px; background:var(--vc-soft); color:var(--vc-sub); border:1px solid var(--vc-line); cursor:default; }
+.vc-root .vc-status.ok { background:var(--vc-good-bg); color:var(--vc-good); border-color:#b7e2c4; }
+.vc-root .vc-status.err { background:#fdecec; color:#b42318; border-color:#f5c2c2; cursor:pointer; }
+.vc-root .vc-layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:16px; align-items:start; }
+.vc-root .vc-list { background:#fff; border:1px solid var(--vc-line); border-radius:10px; overflow:hidden; }
+.vc-root .vc-list-head { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--vc-line); background:var(--vc-soft); font-size:12px; color:var(--vc-sub); }
+.vc-root .vc-row { display:grid; grid-template-columns:22px 64px minmax(0,1fr) auto; gap:10px; align-items:start; padding:11px 14px;
+  border-bottom:1px solid var(--vc-line); cursor:pointer; }
+.vc-root .vc-row:last-child { border-bottom:none; }
+.vc-root .vc-row:hover { background:#f8fbff; }
+.vc-root .vc-row.sel { background:#eaf2fb; box-shadow:inset 3px 0 0 var(--vc-blue2); }
+.vc-root .vc-row input[type=checkbox] { margin-top:2px; }
+.vc-root .vc-sn { font-size:12px; font-weight:700; color:var(--vc-blue); font-variant-numeric:tabular-nums; }
+.vc-root .vc-sn small { display:block; font-weight:600; color:var(--vc-mute); font-size:10.5px; margin-top:2px; }
+.vc-root .vc-q { font-size:13px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.vc-root .vc-meta { font-size:11.5px; color:var(--vc-sub); margin-top:3px; display:flex; gap:10px; flex-wrap:wrap; }
+.vc-root .pill { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+.vc-root .pill.Complete { background:var(--vc-good-bg); color:var(--vc-good); }
+.vc-root .pill.Pending { background:var(--vc-warn-bg); color:var(--vc-warn); }
+.vc-root .vc-detail { background:#fff; border:1px solid var(--vc-line); border-radius:10px; padding:18px 20px; position:sticky; top:calc(var(--hdr-h, 78px) + var(--tabs-h, 59px) + 14px); max-height:calc(100vh - var(--hdr-h, 78px) - var(--tabs-h, 59px) - 28px); overflow:auto; }
+.vc-root .vc-detail h2 { font-size:15px; margin:0 0 6px; line-height:1.45; }
+.vc-root .vc-detail .vc-empty { color:var(--vc-mute); font-size:13px; padding:40px 0; text-align:center; }
+.vc-root .vc-sec { margin-top:16px; }
+.vc-root .vc-sec .vc-label { display:block; margin-bottom:6px; }
+.vc-root .vc-resp { font-size:12.5px; color:var(--vc-sub); background:var(--vc-soft); border:1px solid var(--vc-line); border-radius:8px; padding:9px 11px; line-height:1.5; max-height:110px; overflow:auto; }
+.vc-root .vc-policy { display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #c7dbf0; background:#f3f8fd; border-radius:8px; padding:10px 12px; }
+.vc-root .vc-policy b { font-size:13px; color:var(--vc-blue); } .vc-root .vc-policy span { font-size:12.5px; color:var(--vc-ink); }
+.vc-root .vc-seg { display:inline-flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; }
+.vc-root .vc-seg button { font:inherit; font-size:13px; font-weight:600; padding:7px 16px; border:none; background:#fff; cursor:pointer; color:var(--vc-sub); }
+.vc-root .vc-seg button + button { border-left:1px solid #cbd5e1; }
+.vc-root .vc-seg button.on.Pending { background:var(--vc-warn-bg); color:var(--vc-warn); }
+.vc-root .vc-seg button.on.Complete { background:var(--vc-good-bg); color:var(--vc-good); }
+.vc-root textarea { width:100%; min-height:96px; resize:vertical; line-height:1.5; }
+.vc-root .vc-hint { font-size:11.5px; color:var(--vc-mute); margin-top:4px; }
+.vc-root .vc-ev { list-style:none; margin:0; padding:0; border:1px solid var(--vc-line); border-radius:8px; }
+.vc-root .vc-ev li { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--vc-line); font-size:12.5px; }
+.vc-root .vc-ev li:last-child { border-bottom:none; }
+.vc-root .vc-ev .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+.vc-root .vc-ev .by { color:var(--vc-mute); font-size:11.5px; white-space:nowrap; }
+.vc-root .vc-ev a { color:var(--vc-blue2); cursor:pointer; text-decoration:underline; font-size:12px; }
+.vc-root .vc-drop { border:1.5px dashed #94a3b8; border-radius:8px; padding:14px; text-align:center; font-size:12.5px; color:var(--vc-sub); cursor:pointer; margin-top:8px; }
+.vc-root .vc-drop.over { border-color:var(--vc-blue2); background:#f3f8fd; }
+.vc-root .vc-modal-bg { position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:1000; display:none; align-items:center; justify-content:center; padding:24px; }
+.vc-root .vc-modal { background:#fff; border-radius:12px; width:min(900px,100%); max-height:calc(100vh - 48px); display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+.vc-root .vc-modal.small { width:min(480px,100%); }
+.vc-root .vc-modal-h { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--vc-line); }
+.vc-root .vc-modal-h h3 { margin:0; font-size:15px; flex:1; }
+.vc-root .vc-modal-b { padding:20px 28px; overflow:auto; }
+.vc-root .vc-x { border:none; background:none; font-size:18px; cursor:pointer; color:var(--vc-sub); padding:4px 8px; border-radius:6px; }
+.vc-root .vc-x:hover { background:var(--vc-soft); }
+.vc-doc { font-family:Georgia,"Times New Roman",serif; font-size:14.5px; line-height:1.6; color:#111827; }
+.vc-doc h1 { font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; font-size:22px; margin:0 0 6px; color:#1F4E79; }
+.vc-doc h2 { font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; font-size:16px; margin:22px 0 8px; color:#1F4E79; border-bottom:1px solid #e2e8f0; padding-bottom:4px; }
+.vc-doc p { margin:0 0 10px; }
+.vc-doc table { border-collapse:collapse; width:100%; margin:6px 0 14px; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; font-size:12.5px; }
+.vc-doc th, .vc-doc td { border:1px solid #cbd5e1; padding:6px 8px; text-align:left; vertical-align:top; }
+.vc-doc th { background:#f1f5f9; }
+.vc-doc ul, .vc-doc ol { margin:0 0 12px; padding-left:22px; }
+.vc-doc li { margin-bottom:3px; }
+@media (max-width:900px){ .vc-root .vc-layout{grid-template-columns:1fr} .vc-root .vc-detail{position:static;max-height:none} .vc-root .vc-tiles{grid-template-columns:repeat(2,1fr)} }
 </style>
 </head>
 <body>
@@ -651,6 +773,7 @@
     <button class="dash-tab-btn active" id="tabBtn-compliance" onclick="switchDashTab('compliance')">Compliance Gaps</button>
     <button class="dash-tab-btn" id="tabBtn-remediation" onclick="switchDashTab('remediation')">Remediation Tracker</button>
     <button class="dash-tab-btn" id="tabBtn-kpi" onclick="switchDashTab('kpi')">KPI Report</button>
+    <button class="dash-tab-btn" id="tabBtn-vendor" onclick="switchDashTab('vendor')">Compliance</button>
     <button class="dash-tab-btn" id="tabBtn-erd" onclick="switchDashTab('erd')" style="display:none">ERD</button>
     <button class="dash-tab-btn" id="tabBtn-sysmap" onclick="switchDashTab('sysmap')" style="display:none">Systems Map</button>
   </div>
@@ -1425,11 +1548,84 @@
     </div>
   </div><!-- /tabPanel-sysmap -->
 
+  <div id="tabPanel-vendor" class="tab-panel">
+  <div class="vc-root" style="max-width:1240px;margin:0 auto">
+
+    <div class="vc-head">
+      <div>
+        <h1>Vendor Compliance</h1>
+        <p>Each question below was marked <strong>Incomplete</strong> in the vendor security assessment and now has a CATCH policy every vendor must meet. Pick a vendor, open a question, read its policy, record notes and status, and attach proof. Everything saves to the <strong>compliance_remediation</strong> GitHub repo.</p>
+      </div>
+      <div class="vc-vendor">
+        <label for="vcVendor">Vendor</label>
+        <select id="vcVendor" onchange="vcSelectVendor(this.value)"></select>
+      </div>
+    </div>
+
+    <div class="vc-tiles">
+      <div class="vc-tile"><div class="k">Questions</div><div class="v" id="vcTTotal">—</div><div class="s" id="vcTTotalS">&nbsp;</div></div>
+      <div class="vc-tile good"><div class="k">Complete</div><div class="v" id="vcTDone">—</div><div class="s" id="vcTDoneS">&nbsp;</div></div>
+      <div class="vc-tile warn"><div class="k">Pending</div><div class="v" id="vcTPend">—</div><div class="s" id="vcTPendS">&nbsp;</div></div>
+      <div class="vc-tile ev"><div class="k">Proof files</div><div class="v" id="vcTEv">—</div><div class="s" id="vcTEvS">&nbsp;</div></div>
+    </div>
+
+    <div class="vc-bar">
+      <input type="search" id="vcSearch" placeholder="Search SN, question or policy…" oninput="vcRenderList()">
+      <select id="vcStatusFilter" onchange="vcRenderList()">
+        <option value="All">All statuses</option><option value="Pending">Pending</option><option value="Complete">Complete</option>
+      </select>
+      <div class="vc-spacer"></div>
+      <span class="vc-status" id="vcSync">Not loaded</span>
+      <button class="vc-btn" type="button" onclick="vcReload()">↻ Reload</button>
+      <button class="vc-btn" type="button" id="vcBulkDone" onclick="vcBulk('Complete')" disabled>✓ Mark selected Complete</button>
+      <button class="vc-btn" type="button" id="vcBulkPend" onclick="vcBulk('Pending')" disabled>Mark selected Pending</button>
+    </div>
+
+    <div class="vc-layout">
+      <div class="vc-list">
+        <div class="vc-list-head"><input type="checkbox" id="vcAll" title="Select all shown" onchange="vcToggleAll(this.checked)"><span id="vcCount">0 questions</span></div>
+        <div id="vcRows"></div>
+      </div>
+      <div class="vc-detail" id="vcDetail"><div class="vc-empty">Select a question to see its policy, notes, status and proof files.</div></div>
+    </div>
+
+    <!-- Policy viewer -->
+    <div class="vc-modal-bg" id="vcPolicyBg" onclick="if(event.target===this)vcClosePolicy()">
+      <div class="vc-modal" role="dialog" aria-modal="true" aria-labelledby="vcPolicyTitle">
+        <div class="vc-modal-h">
+          <h3 id="vcPolicyTitle">Policy</h3>
+          <button class="vc-btn" type="button" onclick="vcPrintPolicy()">🖨 Print / Save as PDF</button>
+          <button class="vc-x" type="button" onclick="vcClosePolicy()" aria-label="Close">✕</button>
+        </div>
+        <div class="vc-modal-b"><div class="vc-doc" id="vcPolicyBody">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Connect GitHub -->
+    <div class="vc-modal-bg" id="vcTokenBg" onclick="if(event.target===this)vcCloseToken()">
+      <div class="vc-modal small" role="dialog" aria-modal="true">
+        <div class="vc-modal-h"><h3>Connect to GitHub</h3><button class="vc-x" type="button" onclick="vcCloseToken()" aria-label="Close">✕</button></div>
+        <div class="vc-modal-b">
+          <p style="font-size:13px;color:#475569;line-height:1.6;margin:0 0 12px">Policies, notes, statuses and proof files are stored in the private <strong>cmcdatasolutions/compliance_remediation</strong> repo. Paste a GitHub token with read/write <em>Contents</em> access to that repo. It stays in this browser tab for this session only.</p>
+          <input type="password" id="vcTokenInput" placeholder="github_pat_…" autocomplete="off" style="width:100%" onkeydown="if(event.key==='Enter')vcSaveToken()">
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+            <button class="vc-btn" type="button" onclick="vcCloseToken()">Cancel</button>
+            <button class="vc-btn primary" type="button" onclick="vcSaveToken()">Connect</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="vcFile" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.xlsx,.xls,.csv,.txt,.pptx,.zip" style="display:none" onchange="vcUpload(this.files);this.value=''">
+  </div>
+  </div><!-- /tabPanel-vendor -->
+
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script>
-const BUILD_VERSION = '2026.10.27-sysmap';
+const BUILD_VERSION = '2026.10.29-tabs';
 console.log('CATCH Dashboard build:', BUILD_VERSION);
 
 // ══ CONSTANTS ════════════════════════════════════════════════════════════════
@@ -3296,6 +3492,407 @@ function kpiRenderAll() {
 // so it no longer needs to re-fit itself on resize.)
 
 kpiRenderAll();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script>
+// ══ VENDOR COMPLIANCE TAB ════════════════════════════════════════════════════
+// Questions + policies come from policies/index.json and policies/*.md in the
+// private compliance_remediation repo. Per-vendor status, notes and the list of
+// proof files live in vendor_compliance/responses.json; the proof files
+// themselves are committed under vendor_compliance/evidence/<VENDOR>/<SN>/.
+// Uses the same session GitHub token as the rest of the dashboard.
+const VC_OWNER = 'cmcdatasolutions', VC_REPO = 'compliance_remediation', VC_BRANCH = 'main';
+const VC_INDEX_PATH = 'policies/index.json';
+const VC_RESP_PATH  = 'vendor_compliance/responses.json';
+const VC_EV_DIR     = 'vendor_compliance/evidence';
+const VC_MAX_BYTES  = 25 * 1024 * 1024;
+let VC_VENDORS = ['CUMULUS', 'ATHENA', 'HARMONIC', 'SMART SHEET'];
+
+let vcItems = [], vcData = { vendors: {} }, vcSha = null, vcLoaded = false, vcLoading = false;
+let vcVendor = VC_VENDORS[0], vcSelId = null, vcChecked = new Set(), vcBusy = false;
+let vcPolicyCache = {}, vcPolicyOpen = null;
+
+const vcApiUrl = p => `https://api.github.com/repos/${VC_OWNER}/${VC_REPO}/contents/${p.split('/').map(encodeURIComponent).join('/')}`;
+const vcHdr = (extra) => Object.assign({ 'Authorization': 'Bearer ' + getGithubToken(),
+  'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, extra || {});
+const vcEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const vcB64 = s => btoa(unescape(encodeURIComponent(s)));
+const vcUnB64 = b => decodeURIComponent(escape(atob(b.replace(/\n/g, ''))));
+const vcWho = () => (currentUser && currentUser.email) || 'unknown';
+const vcFmtSize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(0) + ' KB' : (n/1048576).toFixed(1) + ' MB';
+const vcFmtDate = iso => { try { return new Date(iso).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}); } catch(_) { return iso; } };
+const vcIsAdmin = () => !!(currentUser && currentUser.role === 'admin');
+
+function vcSetSync(kind, text, clickToConnect) {
+  const el = document.getElementById('vcSync');
+  el.className = 'vc-status ' + (kind || '');
+  el.textContent = text;
+  el.onclick = clickToConnect ? vcOpenToken : null;
+}
+
+async function vcGetFile(path, raw) {
+  const r = await fetch(vcApiUrl(path) + '?ref=' + VC_BRANCH + '&t=' + Date.now(),
+    { headers: vcHdr(raw ? { 'Accept': 'application/vnd.github.raw' } : null), cache: 'no-store' });
+  if (r.status === 404) return null;
+  if (r.status === 401 || r.status === 403) throw new Error('GitHub rejected the token');
+  if (!r.ok) throw new Error(path + ': HTTP ' + r.status);
+  return r;
+}
+async function vcPutFile(path, b64, message, sha) {
+  const body = { message, content: b64, branch: VC_BRANCH };
+  if (sha) body.sha = sha;
+  return fetch(vcApiUrl(path), { method: 'PUT', headers: vcHdr({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
+}
+
+// ── load ────────────────────────────────────────────────────────────────────
+async function vcLoadResponses() {
+  const r = await vcGetFile(VC_RESP_PATH);
+  if (!r) { vcData = { vendors: {} }; vcSha = null; return; }
+  const j = await r.json();
+  vcSha = j.sha;
+  // files over 1 MB come back without inline content
+  const text = j.content ? vcUnB64(j.content) : await (await vcGetFile(VC_RESP_PATH, true)).text();
+  vcData = JSON.parse(text);
+  if (!vcData.vendors) vcData.vendors = {};
+}
+async function vcLoad() {
+  if (vcLoading) return;
+  if (!getGithubToken()) { vcLoaded = false; vcRenderAll(); vcSetSync('err', '🔗 Connect GitHub to load (click here)', true); return; }
+  vcLoading = true; vcSetSync('', '⏳ Loading from GitHub…');
+  try {
+    const idxResp = await vcGetFile(VC_INDEX_PATH, true);
+    if (!idxResp) throw new Error(VC_INDEX_PATH + ' not found in the repo');
+    const idx = await idxResp.json();
+    vcItems = idx.items || [];
+    if (Array.isArray(idx.vendors) && idx.vendors.length) VC_VENDORS = idx.vendors;
+    await vcLoadResponses();
+    vcLoaded = true;
+    vcSetSync('ok', '✔ Synced · ' + new Date().toLocaleTimeString());
+  } catch (e) {
+    vcLoaded = false;
+    const auth = /rejected/.test(e.message);
+    vcSetSync('err', '✗ ' + e.message + (auth ? ' — click to reconnect' : ''), auth);
+  } finally { vcLoading = false; vcRenderAll(); }
+}
+function vcEnsureLoaded() { if (!vcLoaded) vcLoad(); else vcRenderAll(); }
+async function vcReload() {
+  if (vcNotesDirty() && !confirm('You have unsaved notes. Reload anyway?')) return;
+  vcLoaded = false; vcPolicyCache = {}; await vcLoad();
+}
+
+// ── records & saving ────────────────────────────────────────────────────────
+function vcRec(vendor, id) {
+  const r = ((vcData.vendors[vendor] || {})[id]) || {};
+  return { status: r.status || 'Pending', notes: r.notes || '', evidence: r.evidence || [],
+           updatedBy: r.updatedBy || '', updatedAt: r.updatedAt || '' };
+}
+// Applies `mutate(recordsForVendor)` to the latest responses.json and commits it.
+// On a conflict (someone else saved first) it reloads and re-applies, so
+// concurrent edits to different questions or vendors never overwrite each other.
+async function vcCommit(mutate, message) {
+  if (!getGithubToken()) { vcOpenToken(); return false; }
+  vcBusy = true; vcSetSync('', 'Saving to GitHub…');
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const next = JSON.parse(JSON.stringify(vcData));
+      next.vendors[vcVendor] = next.vendors[vcVendor] || {};
+      mutate(next.vendors[vcVendor]);
+      next.updatedAt = new Date().toISOString();
+      const res = await vcPutFile(VC_RESP_PATH, vcB64(JSON.stringify(next, null, 2)), message, vcSha);
+      if (res.ok) {
+        vcSha = (await res.json()).content.sha; vcData = next;
+        vcSetSync('ok', '✔ Saved · ' + new Date().toLocaleTimeString());
+        return true;
+      }
+      if (res.status === 409 || res.status === 422) { await vcLoadResponses(); continue; }
+      if (res.status === 401 || res.status === 403) throw new Error('GitHub rejected the token — click to reconnect');
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'HTTP ' + res.status);
+    }
+    throw new Error('the file kept changing — click Reload and try again');
+  } catch (e) {
+    vcSetSync('err', '✗ Not saved: ' + e.message, /token/.test(e.message));
+    return false;
+  } finally { vcBusy = false; vcRenderAll(); }
+}
+function vcTouch(recs, id) {
+  const r = recs[id] = recs[id] || { status: 'Pending', notes: '', evidence: [] };
+  r.updatedBy = vcWho(); r.updatedAt = new Date().toISOString();
+  return r;
+}
+async function vcSetStatus(id, status) {
+  if (vcRec(vcVendor, id).status === status) return;
+  await vcCommit(recs => { vcTouch(recs, id).status = status; },
+    `Compliance: ${vcVendor} · SN ${vcItemById(id).sn} → ${status} (${vcWho()})`);
+}
+async function vcBulk(status) {
+  const ids = [...vcChecked];
+  if (!ids.length) return;
+  const ok = await vcCommit(recs => ids.forEach(id => { vcTouch(recs, id).status = status; }),
+    `Compliance: ${vcVendor} · ${ids.length} question(s) → ${status} (${vcWho()})`);
+  if (ok) { vcChecked.clear(); vcRenderAll(); }
+}
+async function vcSaveNotes() {
+  const ta = document.getElementById('vcNotes');
+  if (!ta || !vcSelId) return;
+  const id = vcSelId, text = ta.value;
+  const ok = await vcCommit(recs => { vcTouch(recs, id).notes = text; },
+    `Compliance: ${vcVendor} · SN ${vcItemById(id).sn} notes updated (${vcWho()})`);
+  if (ok) { const h = document.getElementById('vcNotesHint'); if (h) h.textContent = 'Notes saved.'; }
+}
+function vcNotesDirty() {
+  const ta = document.getElementById('vcNotes');
+  return !!(ta && vcSelId && ta.value !== vcRec(vcVendor, vcSelId).notes);
+}
+
+// ── evidence ────────────────────────────────────────────────────────────────
+function vcSafeName(n) { return n.replace(/[^A-Za-z0-9._ -]+/g, '_').replace(/\s+/g, '_').slice(-120); }
+function vcFileToB64(file) {
+  return new Promise((res, rej) => { const r = new FileReader();
+    r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(new Error('could not read ' + file.name));
+    r.readAsDataURL(file); });
+}
+async function vcUpload(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length || !vcSelId) return;
+  if (!getGithubToken()) { vcOpenToken(); return; }
+  const id = vcSelId, item = vcItemById(id);
+  const tooBig = files.filter(f => f.size > VC_MAX_BYTES);
+  if (tooBig.length) { vcSetSync('err', '✗ Over 25 MB, not uploaded: ' + tooBig.map(f => f.name).join(', ')); }
+  const added = [];
+  for (const f of files.filter(f => f.size <= VC_MAX_BYTES)) {
+    vcSetSync('', `⏳ Uploading ${f.name}…`);
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '').replace('T', '-');
+    const path = `${VC_EV_DIR}/${vcVendor.replace(/\s+/g, '_')}/${id}/${stamp}_${vcSafeName(f.name)}`;
+    try {
+      const res = await vcPutFile(path, await vcFileToB64(f), `Compliance proof: ${vcVendor} · SN ${item.sn} · ${f.name} (${vcWho()})`);
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'HTTP ' + res.status); }
+      added.push({ name: f.name, path, size: f.size, type: f.type || '', uploadedBy: vcWho(), uploadedAt: new Date().toISOString() });
+    } catch (e) { vcSetSync('err', `✗ ${f.name}: ${e.message}`); }
+  }
+  if (added.length) {
+    await vcCommit(recs => { const r = vcTouch(recs, id); r.evidence = (r.evidence || []).concat(added); },
+      `Compliance: ${vcVendor} · SN ${item.sn} · ${added.length} proof file(s) attached (${vcWho()})`);
+  }
+}
+async function vcDownload(path, name) {
+  try {
+    vcSetSync('', `⏳ Fetching ${name}…`);
+    const r = await vcGetFile(path, true);
+    if (!r) throw new Error('file not found in the repo');
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    vcSetSync('ok', '✔ Downloaded ' + name);
+  } catch (e) { vcSetSync('err', '✗ ' + e.message); }
+}
+function vcDownloadIdx(k) { const e = vcRec(vcVendor, vcSelId).evidence[k]; if (e) vcDownload(e.path, e.name); }
+async function vcRemoveEvidence(idx) {
+  if (!vcIsAdmin() || !vcSelId) return;
+  const id = vcSelId, ev = vcRec(vcVendor, id).evidence[idx];
+  if (!ev || !confirm(`Remove "${ev.name}" from ${vcVendor}? The file is deleted from the repo (it stays in Git history).`)) return;
+  try {
+    const meta = await vcGetFile(ev.path);
+    if (meta) {
+      const sha = (await meta.json()).sha;
+      const d = await fetch(vcApiUrl(ev.path), { method: 'DELETE', headers: vcHdr({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ message: `Compliance proof removed: ${vcVendor} · ${ev.name} (${vcWho()})`, sha, branch: VC_BRANCH }) });
+      if (!d.ok) throw new Error('delete failed (HTTP ' + d.status + ')');
+    }
+    await vcCommit(recs => { const r = vcTouch(recs, id); r.evidence = (r.evidence || []).filter(x => x.path !== ev.path); },
+      `Compliance: ${vcVendor} · ${ev.name} removed (${vcWho()})`);
+  } catch (e) { vcSetSync('err', '✗ ' + e.message); }
+}
+
+// ── policy viewer ───────────────────────────────────────────────────────────
+async function vcOpenPolicy(id) {
+  const item = vcItemById(id); if (!item) return;
+  vcPolicyOpen = item;
+  document.getElementById('vcPolicyTitle').textContent = item.policyId + ' · ' + item.policyTitle;
+  const body = document.getElementById('vcPolicyBody');
+  document.getElementById('vcPolicyBg').style.display = 'flex';
+  if (!vcPolicyCache[item.policyFile]) {
+    body.innerHTML = 'Loading policy…';
+    try {
+      const r = await vcGetFile(item.policyFile, true);
+      if (!r) throw new Error(item.policyFile + ' not found');
+      vcPolicyCache[item.policyFile] = await r.text();
+    } catch (e) { body.innerHTML = '<p style="color:#b42318">Could not load the policy: ' + vcEsc(e.message) + '</p>'; return; }
+  }
+  body.innerHTML = vcMd(vcPolicyCache[item.policyFile]);
+}
+function vcMd(md) { return (window.marked && marked.parse) ? marked.parse(md) : '<pre style="white-space:pre-wrap">' + vcEsc(md) + '</pre>'; }
+function vcClosePolicy() { document.getElementById('vcPolicyBg').style.display = 'none'; vcPolicyOpen = null; }
+function vcPrintPolicy() {
+  if (!vcPolicyOpen) return;
+  const css = [...document.styleSheets].map(s => { try { return [...s.cssRules].map(r => r.cssText).filter(t => t.includes('.vc-doc')).join('\n'); } catch(_) { return ''; } }).join('\n');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${vcEsc(vcPolicyOpen.policyId + ' ' + vcPolicyOpen.policyTitle)}</title>
+    <style>@page{margin:18mm} body{margin:0} ${css} .vc-foot{margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font:11px system-ui,Arial,sans-serif;color:#64748b}</style></head>
+    <body><div class="vc-doc">${document.getElementById('vcPolicyBody').innerHTML}</div>
+    <div class="vc-foot">CATCH Greater Houston · Vendor: ${vcEsc(vcVendor)} · Printed ${new Date().toLocaleString()}</div></body></html>`;
+  const f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(f);
+  f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close();
+  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 2000); }, 250);
+}
+
+// ── token modal ─────────────────────────────────────────────────────────────
+function vcOpenToken() { document.getElementById('vcTokenBg').style.display = 'flex'; const i = document.getElementById('vcTokenInput'); i.value = ''; i.focus(); }
+function vcCloseToken() { document.getElementById('vcTokenBg').style.display = 'none'; }
+async function vcSaveToken() {
+  const v = document.getElementById('vcTokenInput').value.trim(); if (!v) return;
+  setGithubToken(v); vcCloseToken(); await vcLoad();
+  if (typeof autoLoadExcel === 'function' && currentUser) autoLoadExcel();
+  if (typeof remGhLoad === 'function' && await remGhLoad()) { remPopulateCategoryFilter(); remRenderAll(); }
+}
+
+// ── rendering ───────────────────────────────────────────────────────────────
+function vcItemById(id) { return vcItems.find(i => i.id === id) || {}; }
+function vcSelectVendor(v) {
+  if (vcNotesDirty() && !confirm('You have unsaved notes for this question. Switch vendor anyway?')) {
+    document.getElementById('vcVendor').value = vcVendor; return;
+  }
+  vcVendor = v; vcChecked.clear();
+  try { localStorage.setItem('catch_vc_vendor', v); } catch(_) {}
+  vcRenderAll();
+}
+function vcSelect(id) {
+  if (id === vcSelId) return;
+  if (vcNotesDirty() && !confirm('You have unsaved notes. Leave this question without saving?')) return;
+  vcSelId = id; vcRenderList(); vcRenderDetail();
+}
+function vcCheck(id, on) { on ? vcChecked.add(id) : vcChecked.delete(id); vcUpdateBulk(); }
+function vcToggleAll(on) { vcFiltered().forEach(i => on ? vcChecked.add(i.id) : vcChecked.delete(i.id)); vcRenderList(); }
+function vcUpdateBulk() {
+  const n = vcChecked.size, dis = !n || vcBusy || !vcLoaded;
+  document.getElementById('vcBulkDone').disabled = dis;
+  document.getElementById('vcBulkPend').disabled = dis;
+}
+function vcFiltered() {
+  const q = (document.getElementById('vcSearch').value || '').trim().toLowerCase();
+  const st = document.getElementById('vcStatusFilter').value;
+  return vcItems.filter(i => {
+    if (st !== 'All' && vcRec(vcVendor, i.id).status !== st) return false;
+    if (!q) return true;
+    return [i.sn, i.question, i.policyId, i.policyTitle, i.category].join(' ').toLowerCase().includes(q);
+  });
+}
+function vcRenderAll() {
+  const sel = document.getElementById('vcVendor');
+  if (sel && sel.options.length !== VC_VENDORS.length) {
+    sel.innerHTML = VC_VENDORS.map(v => `<option value="${vcEsc(v)}">${vcEsc(v)}</option>`).join('');
+  }
+  if (!VC_VENDORS.includes(vcVendor)) vcVendor = VC_VENDORS[0];
+  if (sel) sel.value = vcVendor;
+  vcRenderTiles(); vcRenderList(); vcRenderDetail();
+}
+function vcRenderTiles() {
+  const n = vcItems.length;
+  const recs = vcItems.map(i => vcRec(vcVendor, i.id));
+  const done = recs.filter(r => r.status === 'Complete').length;
+  const ev = recs.reduce((s, r) => s + r.evidence.length, 0);
+  const withEv = recs.filter(r => r.evidence.length).length;
+  const pct = x => n ? Math.round(x / n * 100) + '%' : '';
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('vcTTotal', vcLoaded ? n : '—');  set('vcTTotalS', vcLoaded ? vcVendor : ' ');
+  set('vcTDone', vcLoaded ? done : '—'); set('vcTDoneS', vcLoaded ? pct(done) + ' of questions' : ' ');
+  set('vcTPend', vcLoaded ? n - done : '—'); set('vcTPendS', vcLoaded ? pct(n - done) + ' of questions' : ' ');
+  set('vcTEv', vcLoaded ? ev : '—'); set('vcTEvS', vcLoaded ? `${withEv} of ${n} questions have proof` : ' ');
+}
+function vcRenderList() {
+  const rows = document.getElementById('vcRows'); if (!rows) return;
+  const list = vcLoaded ? vcFiltered() : [];
+  document.getElementById('vcCount').textContent = vcLoaded ? `${list.length} of ${vcItems.length} questions` : 'Not loaded';
+  const all = document.getElementById('vcAll');
+  all.checked = list.length > 0 && list.every(i => vcChecked.has(i.id));
+  rows.innerHTML = !vcLoaded
+    ? '<div style="padding:28px;text-align:center;color:#94a3b8;font-size:13px">Connect GitHub to load the questions.</div>'
+    : list.length ? list.map(i => {
+        const r = vcRec(vcVendor, i.id);
+        return `<div class="vc-row${i.id === vcSelId ? ' sel' : ''}" onclick="vcSelect('${vcEsc(i.id)}')">
+          <input type="checkbox" ${vcChecked.has(i.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="vcCheck('${vcEsc(i.id)}',this.checked)" aria-label="Select SN ${vcEsc(i.sn)}">
+          <div class="vc-sn">${vcEsc(i.sn)}<small>${vcEsc(i.policyId)}</small></div>
+          <div><div class="vc-q">${vcEsc(i.question)}</div>
+            <div class="vc-meta"><span>${vcEsc(i.category)}</span>${i.riskRating ? `<span>Risk: ${vcEsc(i.riskRating)}</span>` : ''}${r.evidence.length ? `<span>📎 ${r.evidence.length}</span>` : ''}${r.notes ? '<span>📝 notes</span>' : ''}</div></div>
+          <span class="pill ${r.status}">${r.status}</span>
+        </div>`; }).join('')
+      : '<div style="padding:28px;text-align:center;color:#94a3b8;font-size:13px">No questions match these filters.</div>';
+  vcUpdateBulk();
+}
+function vcRenderDetail() {
+  const box = document.getElementById('vcDetail'); if (!box) return;
+  const i = vcLoaded && vcSelId ? vcItemById(vcSelId) : null;
+  if (!i || !i.id) { box.innerHTML = '<div class="vc-empty">Select a question to see its policy, notes, status and proof files.</div>'; return; }
+  const ta = document.getElementById('vcNotes');
+  const keepNotes = ta && ta.dataset.id === i.id + '|' + vcVendor ? ta.value : null;   // don't wipe typing on re-render
+  const r = vcRec(vcVendor, i.id);
+  box.innerHTML = `
+    <div class="vc-label">SN ${vcEsc(i.sn)} · ${vcEsc(i.category)}${i.riskFindingId ? ' · ' + vcEsc(i.riskFindingId) : ''}</div>
+    <h2>${vcEsc(i.question)}</h2>
+    <div class="vc-sec"><span class="vc-label">Policy vendors must follow</span>
+      <div class="vc-policy"><div><b>${vcEsc(i.policyId)}</b> <span>${vcEsc(i.policyTitle)}</span></div>
+        <button class="vc-btn primary" type="button" onclick="vcOpenPolicy('${vcEsc(i.id)}')">📄 View policy</button></div></div>
+    ${i.currentResponse ? `<div class="vc-sec"><span class="vc-label">Original CATCH response</span><div class="vc-resp">${vcEsc(i.currentResponse)}</div></div>` : ''}
+    <div class="vc-sec"><span class="vc-label">Status for ${vcEsc(vcVendor)}</span>
+      <div class="vc-seg">${['Pending', 'Complete'].map(s => `<button type="button" class="${s}${r.status === s ? ' on' : ''}" ${vcBusy ? 'disabled' : ''} onclick="vcSetStatus('${vcEsc(i.id)}','${s}')">${s === 'Complete' ? '✓ ' : ''}${s}</button>`).join('')}</div>
+      ${r.updatedAt ? `<div class="vc-hint">Last updated ${vcEsc(vcFmtDate(r.updatedAt))} by ${vcEsc(r.updatedBy)}</div>` : ''}</div>
+    <div class="vc-sec"><label class="vc-label" for="vcNotes">Notes / comments</label>
+      <textarea id="vcNotes" data-id="${vcEsc(i.id + '|' + vcVendor)}" placeholder="What has the vendor provided, what is still missing, follow-ups…" oninput="document.getElementById('vcNotesHint').textContent='Unsaved changes'">${vcEsc(keepNotes != null ? keepNotes : r.notes)}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span class="vc-hint" id="vcNotesHint" style="margin:0">${keepNotes != null && keepNotes !== r.notes ? 'Unsaved changes' : '&nbsp;'}</span>
+        <button class="vc-btn primary" type="button" onclick="vcSaveNotes()" ${vcBusy ? 'disabled' : ''}>Save notes</button></div></div>
+    <div class="vc-sec"><span class="vc-label">Proof files (${r.evidence.length})</span>
+      ${r.evidence.length ? `<ul class="vc-ev">${r.evidence.map((e, k) => `<li><span>📎</span><span class="nm" title="${vcEsc(e.name)}">${vcEsc(e.name)}</span>
+          <span class="by">${vcEsc(vcFmtSize(e.size || 0))} · ${vcEsc(vcFmtDate(e.uploadedAt))}</span>
+          <a onclick="vcDownloadIdx(${k})">Download</a>
+          ${vcIsAdmin() ? `<a onclick="vcRemoveEvidence(${k})" style="color:#b42318">Remove</a>` : ''}</li>`).join('')}</ul>` : ''}
+      <div class="vc-drop" id="vcDrop" onclick="document.getElementById('vcFile').click()">
+        <strong>Attach proof</strong> — click or drop files here<br><span style="font-size:11.5px;color:#94a3b8">PDF, Word, Excel, PowerPoint, images, CSV, TXT, ZIP · up to 25 MB each</span></div></div>`;
+  const d = document.getElementById('vcDrop');
+  d.ondragover = e => { e.preventDefault(); d.classList.add('over'); };
+  d.ondragleave = () => d.classList.remove('over');
+  d.ondrop = e => { e.preventDefault(); d.classList.remove('over'); vcUpload(e.dataTransfer.files); };
+}
+
+// ── wiring into the existing dashboard ──────────────────────────────────────
+(function () {
+  try { const v = localStorage.getItem('catch_vc_vendor'); if (v && VC_VENDORS.includes(v)) vcVendor = v; } catch(_) {}
+  const origSwitch = window.switchDashTab;
+  window.switchDashTab = function (name) {
+    origSwitch(name);
+    if (name === 'vendor') vcEnsureLoaded();
+  };
+  const origLogout = window.doLogout;
+  window.doLogout = function () {
+    vcItems = []; vcData = { vendors: {} }; vcSha = null; vcLoaded = false; vcSelId = null; vcChecked.clear(); vcPolicyCache = {};
+    vcClosePolicy(); vcRenderAll(); vcSetSync('', 'Not loaded');
+    origLogout();
+  };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { vcClosePolicy(); vcCloseToken(); } });
+  // Deep link: ...#compliance opens this tab after sign-in.
+  const origComplete = window.completeLogin;
+  window.completeLogin = function (user) {
+    origComplete(user);
+    if ((location.hash || '').toLowerCase() === '#compliance') switchDashTab('vendor');
+  };
+  vcRenderAll();
+})();
+</script>
+
+<script>
+// Keep the frozen tab bar exactly under the header, whatever height the header wraps to.
+(function () {
+  const root = document.documentElement, hdr = document.querySelector('.header'), tabs = document.querySelector('.dash-tabs');
+  const sync = () => {
+    if (hdr) root.style.setProperty('--hdr-h', hdr.offsetHeight + 'px');
+    if (tabs) root.style.setProperty('--tabs-h', tabs.offsetHeight + 'px');
+  };
+  sync();
+  if (window.ResizeObserver) { const ro = new ResizeObserver(sync); hdr && ro.observe(hdr); tabs && ro.observe(tabs); }
+  window.addEventListener('resize', sync);
+})();
 </script>
 </body>
 </html>
