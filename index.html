@@ -665,6 +665,7 @@
 .vc-doc h1 { font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; font-size:22px; margin:0 0 6px; color:#1F4E79; }
 .vc-doc h2 { font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; font-size:16px; margin:22px 0 8px; color:#1F4E79; border-bottom:1px solid #e2e8f0; padding-bottom:4px; }
 .vc-doc p { margin:0 0 10px; }
+.vc-doc img[alt^="CATCH"] { display:block; width:150px; height:auto; margin:0 0 14px; }
 .vc-doc table { border-collapse:collapse; width:100%; margin:6px 0 14px; font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; font-size:12.5px; }
 .vc-doc th, .vc-doc td { border:1px solid #cbd5e1; padding:6px 8px; text-align:left; vertical-align:top; }
 .vc-doc th { background:#f1f5f9; }
@@ -1653,7 +1654,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script>
-const BUILD_VERSION = '2026.10.30-test-cases';
+const BUILD_VERSION = '2026.10.30-policy-logo';
 console.log('CATCH Dashboard build:', BUILD_VERSION);
 
 // ══ CONSTANTS ════════════════════════════════════════════════════════════════
@@ -3754,7 +3755,13 @@ async function vcOpenPolicy(id) {
   }
   body.innerHTML = vcMd(vcPolicyCache[item.policyFile]);
 }
-function vcMd(md) { return (window.marked && marked.parse) ? marked.parse(md) : '<pre style="white-space:pre-wrap">' + vcEsc(md) + '</pre>'; }
+function vcMd(md) {
+  let html = (window.marked && marked.parse) ? marked.parse(md) : '<pre style="white-space:pre-wrap">' + vcEsc(md) + '</pre>';
+  // Policy files reference catch-logo.png next to them in the private repo; use the logo already embedded in this page instead.
+  const logo = document.querySelector('.logo-wrap img');
+  if (logo && logo.src) html = html.replace(/src="catch-logo\.png"/g, 'src="' + logo.src + '"');
+  return html;
+}
 function vcClosePolicy() { document.getElementById('vcPolicyBg').style.display = 'none'; vcPolicyOpen = null; }
 function vcPrintPolicy() {
   if (!vcPolicyOpen) return;
