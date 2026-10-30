@@ -671,6 +671,34 @@
 .vc-doc ul, .vc-doc ol { margin:0 0 12px; padding-left:22px; }
 .vc-doc li { margin-bottom:3px; }
 @media (max-width:900px){ .vc-root .vc-layout{grid-template-columns:1fr} .vc-root .vc-detail{position:static;max-height:none} .vc-root .vc-tiles{grid-template-columns:repeat(2,1fr)} }
+.vc-root .vc-tc-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.vc-root .vc-tc-sum { font-size:12px; color:var(--vc-sub); flex:1; }
+.vc-root .vc-tc-sum b.f { color:#b42318; }
+.vc-root .vc-tc-bar { display:flex; height:6px; border-radius:999px; background:#e2e8f0; overflow:hidden; margin-bottom:10px; }
+.vc-root .vc-tc-bar span { background:var(--vc-good); } .vc-root .vc-tc-bar span.f { background:#d03b3b; }
+.vc-root .vc-tc { border:1px solid var(--vc-line); border-left:3px solid #cbd5e1; border-radius:8px; margin-bottom:6px; background:#fff; }
+.vc-root .vc-tc.Pass { border-left-color:var(--vc-good); } .vc-root .vc-tc.Fail { border-left-color:#d03b3b; }
+.vc-root .vc-tc summary { display:flex; align-items:center; gap:10px; padding:8px 10px; cursor:pointer; list-style:none; font-size:13px; }
+.vc-root .vc-tc summary::-webkit-details-marker { display:none; }
+.vc-root .vc-tc summary::before { content:"▸"; color:var(--vc-mute); font-size:11px; }
+.vc-root .vc-tc[open] summary::before { content:"▾"; }
+.vc-root .vc-tc-id { font-weight:700; color:var(--vc-blue); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.vc-root .vc-tc-name { flex:1; min-width:0; }
+.vc-root .vc-tc-body { padding:2px 12px 12px 30px; font-size:12.5px; line-height:1.5; color:var(--vc-ink); }
+.vc-root .vc-tc-body ol { margin:2px 0 10px; padding-left:18px; }
+.vc-root .vc-tc-body .vc-label { display:block; margin-bottom:2px; font-size:10.5px; }
+.vc-root .vc-tc-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; }
+.vc-root .vc-tc-act { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.vc-root .vc-seg-sm button { padding:5px 11px; font-size:12px; }
+.vc-root .vc-seg button.on.Pass { background:var(--vc-good-bg); color:var(--vc-good); }
+.vc-root .vc-seg button.on.Fail { background:#fdecec; color:#b42318; }
+.vc-root .vc-seg button.on.Nottested { background:#f1f5f9; color:var(--vc-ink); }
+.vc-root .vc-tc-note { flex:1; min-width:180px; font:inherit; font-size:12.5px; padding:6px 9px; border:1px solid #9FD3AC; background:#EAF7EC; border-radius:8px; }
+.vc-root .pill.Pass { background:var(--vc-good-bg); color:var(--vc-good); }
+.vc-root .pill.Fail { background:#fdecec; color:#b42318; }
+.vc-root .pill.Nottested { background:#f1f5f9; color:var(--vc-sub); }
+.vc-root .vc-tstat.pass { color:var(--vc-good); font-weight:600; } .vc-root .vc-tstat.fail { color:#b42318; font-weight:600; }
+@media (max-width:600px){ .vc-root .vc-tc-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -1625,7 +1653,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script>
-const BUILD_VERSION = '2026.10.30-finding-id';
+const BUILD_VERSION = '2026.10.30-test-cases';
 console.log('CATCH Dashboard build:', BUILD_VERSION);
 
 // ══ CONSTANTS ════════════════════════════════════════════════════════════════
@@ -3505,10 +3533,12 @@ kpiRenderAll();
 const VC_OWNER = 'cmcdatasolutions', VC_REPO = 'compliance_remediation', VC_BRANCH = 'main';
 const VC_INDEX_PATH = 'policies/index.json';
 const VC_RESP_PATH  = 'vendor_compliance/responses.json';
+const VC_TESTS_PATH = 'policies/test_cases.json';
 const VC_EV_DIR     = 'vendor_compliance/evidence';
 const VC_MAX_BYTES  = 25 * 1024 * 1024;
 let VC_VENDORS = ['CUMULUS', 'ATHENA', 'HARMONIC', 'SMART SHEET'];
 
+let vcTests = {}, vcOpenTests = new Set();
 let vcItems = [], vcData = { vendors: {} }, vcSha = null, vcLoaded = false, vcLoading = false;
 let vcVendor = VC_VENDORS[0], vcSelId = null, vcChecked = new Set(), vcBusy = false;
 let vcPolicyCache = {}, vcPolicyOpen = null;
@@ -3566,6 +3596,8 @@ async function vcLoad() {
     const idx = await idxResp.json();
     vcItems = idx.items || [];
     if (Array.isArray(idx.vendors) && idx.vendors.length) VC_VENDORS = idx.vendors;
+    const tcResp = await vcGetFile(VC_TESTS_PATH, true);     // optional file
+    vcTests = tcResp ? ((await tcResp.json()).policies || {}) : {};
     await vcLoadResponses();
     vcLoaded = true;
     vcSetSync('ok', '✔ Synced · ' + new Date().toLocaleTimeString());
@@ -3584,7 +3616,7 @@ async function vcReload() {
 // ── records & saving ────────────────────────────────────────────────────────
 function vcRec(vendor, id) {
   const r = ((vcData.vendors[vendor] || {})[id]) || {};
-  return { status: r.status || 'Pending', notes: r.notes || '', evidence: r.evidence || [],
+  return { status: r.status || 'Pending', notes: r.notes || '', evidence: r.evidence || [], tests: r.tests || {},
            updatedBy: r.updatedBy || '', updatedAt: r.updatedAt || '' };
 }
 // Applies `mutate(recordsForVendor)` to the latest responses.json and commits it.
@@ -3738,6 +3770,55 @@ function vcPrintPolicy() {
   setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 2000); }, 250);
 }
 
+// ── test cases ──────────────────────────────────────────────────────────────
+function vcTestsFor(item) { return vcTests[item.policyId] || []; }
+function vcTestStats(item, rec) {
+  const tcs = vcTestsFor(item);
+  const res = tcs.map(t => (rec.tests[t.id] || {}).result || 'Not tested');
+  return { total: tcs.length, pass: res.filter(x => x === 'Pass').length, fail: res.filter(x => x === 'Fail').length,
+           tested: res.filter(x => x !== 'Not tested').length };
+}
+async function vcSetTest(id, tcId, result) {
+  const cur = vcRec(vcVendor, id).tests[tcId] || {};
+  if ((cur.result || 'Not tested') === result) return;
+  vcOpenTests.add(tcId);
+  await vcCommit(recs => {
+    const r = recs[id] = recs[id] || { status: 'Pending', notes: '', evidence: [] };
+    r.tests = r.tests || {};
+    r.tests[tcId] = Object.assign({}, r.tests[tcId], { result, by: vcWho(), at: new Date().toISOString() });
+  }, `Compliance: ${vcVendor} · ${tcId} → ${result} (${vcWho()})`);
+}
+async function vcSetTestNote(id, tcId, note) {
+  const cur = vcRec(vcVendor, id).tests[tcId] || {};
+  if ((cur.note || '') === note) return;
+  vcOpenTests.add(tcId);
+  await vcCommit(recs => {
+    const r = recs[id] = recs[id] || { status: 'Pending', notes: '', evidence: [] };
+    r.tests = r.tests || {};
+    r.tests[tcId] = Object.assign({ result: 'Not tested' }, r.tests[tcId], { note, by: vcWho(), at: new Date().toISOString() });
+  }, `Compliance: ${vcVendor} · ${tcId} note updated (${vcWho()})`);
+}
+function vcToggleTest(tcId, open) { open ? vcOpenTests.add(tcId) : vcOpenTests.delete(tcId); }
+function vcPrintTests(id) {
+  const i = vcItemById(id), r = vcRec(vcVendor, id), tcs = vcTestsFor(i), st = vcTestStats(i, r);
+  const rows = tcs.map(t => { const x = r.tests[t.id] || {};
+    return `<tr><td><b>${vcEsc(t.id)}</b></td><td><b>${vcEsc(t.control)}</b><ol>${t.steps.map(s => `<li>${vcEsc(s)}</li>`).join('')}</ol>
+      <div><i>Evidence:</i> ${vcEsc(t.evidence)}</div><div><i>Pass if:</i> ${vcEsc(t.pass)}</div></td>
+      <td>${vcEsc(x.result || 'Not tested')}${x.note ? `<div style="margin-top:4px;font-size:11px">${vcEsc(x.note)}</div>` : ''}${x.at ? `<div style="margin-top:4px;font-size:10.5px;color:#64748b">${vcEsc(vcFmtDate(x.at))}<br>${vcEsc(x.by || '')}</div>` : ''}</td></tr>`; }).join('');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Test plan ${vcEsc(i.policyId)} ${vcEsc(vcVendor)}</title>
+    <style>@page{margin:15mm} body{font:12.5px system-ui,Arial,sans-serif;color:#111827} h1{font-size:18px;color:#1F4E79;margin:0 0 4px} p{margin:0 0 10px;color:#475569}
+    table{border-collapse:collapse;width:100%} th,td{border:1px solid #cbd5e1;padding:7px 8px;vertical-align:top;text-align:left} th{background:#f1f5f9}
+    td ol{margin:4px 0 6px;padding-left:18px} tr{page-break-inside:avoid}</style></head><body>
+    <h1>Test plan · ${vcEsc(i.policyId)} ${vcEsc(i.policyTitle)}</h1>
+    <p>Vendor: <b>${vcEsc(vcVendor)}</b> · SN ${vcEsc(i.sn)}${i.riskFindingId ? ' · ' + vcEsc(i.riskFindingId) : ''} · ${st.pass} passed, ${st.fail} failed, ${st.total - st.tested} not tested · Printed ${new Date().toLocaleString()}</p>
+    <table><thead><tr><th style="width:70px">Test</th><th>Control, steps and criteria</th><th style="width:150px">Result</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+  const f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(f);
+  f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close();
+  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 2000); }, 250);
+}
+
 // ── token modal ─────────────────────────────────────────────────────────────
 function vcOpenToken() { document.getElementById('vcTokenBg').style.display = 'flex'; const i = document.getElementById('vcTokenInput'); i.value = ''; i.focus(); }
 function vcCloseToken() { document.getElementById('vcTokenBg').style.display = 'none'; }
@@ -3761,7 +3842,7 @@ function vcSelectVendor(v) {
 function vcSelect(id) {
   if (id === vcSelId) return;
   if (vcNotesDirty() && !confirm('You have unsaved notes. Leave this question without saving?')) return;
-  vcSelId = id; vcRenderList(); vcRenderDetail();
+  vcSelId = id; vcOpenTests.clear(); vcRenderList(); vcRenderDetail();
 }
 function vcCheck(id, on) { on ? vcChecked.add(id) : vcChecked.delete(id); vcUpdateBulk(); }
 function vcToggleAll(on) { vcFiltered().forEach(i => on ? vcChecked.add(i.id) : vcChecked.delete(i.id)); vcRenderList(); }
@@ -3815,11 +3896,32 @@ function vcRenderList() {
           <input type="checkbox" ${vcChecked.has(i.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="vcCheck('${vcEsc(i.id)}',this.checked)" aria-label="Select SN ${vcEsc(i.sn)}">
           <div class="vc-sn">${vcEsc(i.sn)}<small>${vcEsc(i.policyId)}</small></div>
           <div><div class="vc-q">${vcEsc(i.question)}</div>
-            <div class="vc-meta"><span>${vcEsc(i.category)}</span>${i.riskFindingId ? `<span>Finding ID: ${vcEsc(i.riskFindingId)}</span>` : ''}${i.riskRating ? `<span>Risk: ${vcEsc(i.riskRating)}</span>` : ''}${r.evidence.length ? `<span>📎 ${r.evidence.length}</span>` : ''}${r.notes ? '<span>📝 notes</span>' : ''}</div></div>
+            <div class="vc-meta"><span>${vcEsc(i.category)}</span>${i.riskFindingId ? `<span>Finding ID: ${vcEsc(i.riskFindingId)}</span>` : ''}${i.riskRating ? `<span>Risk: ${vcEsc(i.riskRating)}</span>` : ''}${(() => { const t = vcTestStats(i, r); return t.total ? `<span class="vc-tstat${t.fail ? ' fail' : t.pass === t.total ? ' pass' : ''}">🧪 ${t.pass}/${t.total} passed${t.fail ? ` · ${t.fail} failed` : ''}</span>` : ''; })()}${r.evidence.length ? `<span>📎 ${r.evidence.length}</span>` : ''}${r.notes ? '<span>📝 notes</span>' : ''}</div></div>
           <span class="pill ${r.status}">${r.status}</span>
         </div>`; }).join('')
       : '<div style="padding:28px;text-align:center;color:#94a3b8;font-size:13px">No questions match these filters.</div>';
   vcUpdateBulk();
+}
+function vcRenderTests(i, r) {
+  const tcs = vcTestsFor(i);
+  if (!tcs.length) return '';
+  const st = vcTestStats(i, r);
+  const pct = st.total ? Math.round(st.pass / st.total * 100) : 0;
+  return `<div class="vc-sec"><div class="vc-tc-head"><span class="vc-label" style="margin:0">Test cases for ${vcEsc(vcVendor)}</span>
+      <span class="vc-tc-sum"><b>${st.pass}</b> passed · <b class="${st.fail ? 'f' : ''}">${st.fail}</b> failed · ${st.total - st.tested} not tested</span>
+      <button class="vc-btn" type="button" onclick="vcPrintTests('${vcEsc(i.id)}')">🖨 Print test plan</button></div>
+    <div class="vc-tc-bar"><span style="width:${pct}%"></span><span class="f" style="width:${st.total ? st.fail / st.total * 100 : 0}%"></span></div>
+    ${tcs.map(t => { const x = r.tests[t.id] || {}, res = x.result || 'Not tested', cls = res.replace(' ', '');
+      return `<details class="vc-tc ${cls}" ${vcOpenTests.has(t.id) ? 'open' : ''} ontoggle="vcToggleTest('${vcEsc(t.id)}', this.open)">
+        <summary><span class="vc-tc-id">${vcEsc(t.id)}</span><span class="vc-tc-name">${vcEsc(t.control)}</span><span class="pill ${cls}">${vcEsc(res)}</span></summary>
+        <div class="vc-tc-body">
+          <div class="vc-label">Steps</div><ol>${t.steps.map(s => `<li>${vcEsc(s)}</li>`).join('')}</ol>
+          <div class="vc-tc-grid"><div><div class="vc-label">Evidence to request</div>${vcEsc(t.evidence)}</div>
+            <div><div class="vc-label">Pass if</div>${vcEsc(t.pass)}</div></div>
+          <div class="vc-tc-act"><div class="vc-seg vc-seg-sm">${['Not tested', 'Pass', 'Fail'].map(v => `<button type="button" class="${v.replace(' ', '')}${res === v ? ' on' : ''}" ${vcBusy ? 'disabled' : ''} onclick="vcSetTest('${vcEsc(i.id)}','${vcEsc(t.id)}','${v}')">${v === 'Pass' ? '✓ ' : v === 'Fail' ? '✗ ' : ''}${v}</button>`).join('')}</div>
+            <input type="text" class="vc-tc-note" placeholder="Tester note (e.g. what failed, evidence file name)…" value="${vcEsc(x.note || '')}" onchange="vcSetTestNote('${vcEsc(i.id)}','${vcEsc(t.id)}',this.value)"></div>
+          ${x.at ? `<div class="vc-hint">Last result ${vcEsc(vcFmtDate(x.at))} by ${vcEsc(x.by || '')}</div>` : ''}
+        </div></details>`; }).join('')}</div>`;
 }
 function vcRenderDetail() {
   const box = document.getElementById('vcDetail'); if (!box) return;
@@ -3838,6 +3940,7 @@ function vcRenderDetail() {
     <div class="vc-sec"><span class="vc-label">Status for ${vcEsc(vcVendor)}</span>
       <div class="vc-seg">${['Pending', 'Complete'].map(s => `<button type="button" class="${s}${r.status === s ? ' on' : ''}" ${vcBusy ? 'disabled' : ''} onclick="vcSetStatus('${vcEsc(i.id)}','${s}')">${s === 'Complete' ? '✓ ' : ''}${s}</button>`).join('')}</div>
       ${r.updatedAt ? `<div class="vc-hint">Last updated ${vcEsc(vcFmtDate(r.updatedAt))} by ${vcEsc(r.updatedBy)}</div>` : ''}</div>
+    ${vcRenderTests(i, r)}
     <div class="vc-sec"><label class="vc-label" for="vcNotes">Notes / comments</label>
       <textarea id="vcNotes" data-id="${vcEsc(i.id + '|' + vcVendor)}" placeholder="What has the vendor provided, what is still missing, follow-ups…" oninput="document.getElementById('vcNotesHint').textContent='Unsaved changes'">${vcEsc(keepNotes != null ? keepNotes : r.notes)}</textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
