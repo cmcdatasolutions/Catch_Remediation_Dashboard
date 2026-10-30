@@ -602,7 +602,7 @@
 .vc-root .vc-tile .v { font-size:26px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; }
 .vc-root .vc-tile .s { font-size:12px; color:var(--vc-sub); margin-top:2px; }
 .vc-root .vc-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
-.vc-root .vc-bar input[type=search] { flex:1; min-width:180px; }
+.vc-root .vc-bar input[type=search] { flex:1; min-width:250px; }
 .vc-root .vc-spacer { flex:1; }
 .vc-root .vc-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid #cbd5e1; background:#fff;
   color:var(--vc-ink); font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
@@ -1570,7 +1570,7 @@
     </div>
 
     <div class="vc-bar">
-      <input type="search" id="vcSearch" placeholder="Search SN, question or policy…" oninput="vcRenderList()">
+      <input type="search" id="vcSearch" placeholder="Search SN, Finding ID or text…" oninput="vcRenderList()">
       <select id="vcStatusFilter" onchange="vcRenderList()">
         <option value="All">All statuses</option><option value="Pending">Pending</option><option value="Complete">Complete</option>
       </select>
@@ -1625,7 +1625,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script>
-const BUILD_VERSION = '2026.10.29-tabs';
+const BUILD_VERSION = '2026.10.30-finding-id';
 console.log('CATCH Dashboard build:', BUILD_VERSION);
 
 // ══ CONSTANTS ════════════════════════════════════════════════════════════════
@@ -3776,7 +3776,7 @@ function vcFiltered() {
   return vcItems.filter(i => {
     if (st !== 'All' && vcRec(vcVendor, i.id).status !== st) return false;
     if (!q) return true;
-    return [i.sn, i.question, i.policyId, i.policyTitle, i.category].join(' ').toLowerCase().includes(q);
+    return [i.sn, i.question, i.policyId, i.policyTitle, i.category, i.riskFindingId].join(' ').toLowerCase().includes(q);
   });
 }
 function vcRenderAll() {
@@ -3815,7 +3815,7 @@ function vcRenderList() {
           <input type="checkbox" ${vcChecked.has(i.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="vcCheck('${vcEsc(i.id)}',this.checked)" aria-label="Select SN ${vcEsc(i.sn)}">
           <div class="vc-sn">${vcEsc(i.sn)}<small>${vcEsc(i.policyId)}</small></div>
           <div><div class="vc-q">${vcEsc(i.question)}</div>
-            <div class="vc-meta"><span>${vcEsc(i.category)}</span>${i.riskRating ? `<span>Risk: ${vcEsc(i.riskRating)}</span>` : ''}${r.evidence.length ? `<span>📎 ${r.evidence.length}</span>` : ''}${r.notes ? '<span>📝 notes</span>' : ''}</div></div>
+            <div class="vc-meta"><span>${vcEsc(i.category)}</span>${i.riskFindingId ? `<span>Finding ID: ${vcEsc(i.riskFindingId)}</span>` : ''}${i.riskRating ? `<span>Risk: ${vcEsc(i.riskRating)}</span>` : ''}${r.evidence.length ? `<span>📎 ${r.evidence.length}</span>` : ''}${r.notes ? '<span>📝 notes</span>' : ''}</div></div>
           <span class="pill ${r.status}">${r.status}</span>
         </div>`; }).join('')
       : '<div style="padding:28px;text-align:center;color:#94a3b8;font-size:13px">No questions match these filters.</div>';
