@@ -379,36 +379,24 @@
   .viz-root td.q { max-width: 260px; }
 }
 
-/* Tab bar for switching between Compliance Gaps, Remediation Tracker, and KPI Report */
+/* Tab bar: plain text tabs; the selected tab gets a navy underline */
 .dash-tabs {
-  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-end;
   position: sticky; top: var(--hdr-h, 78px); z-index: 95;
-  background: #fff; margin: 0 -28px 18px; padding: 12px 28px;
-  border-bottom: 1px solid #E2E8F0; box-shadow: 0 4px 10px -6px rgba(15,30,50,.25);
+  background: #fff; margin: 0 -28px 18px; padding: 8px 28px 0;
+  border-bottom: 1px solid #E2E8F0; box-shadow: 0 4px 10px -6px rgba(15,30,50,.18);
 }
 .dash-tab-btn {
-  --tab: #1F4E79;
-  padding: 8px 18px; border: 1px solid rgba(0,0,0,.25); border-radius: 8px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tab) 78%, #fff) 0%, var(--tab) 55%, color-mix(in srgb, var(--tab) 82%, #000) 100%);
-  color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .01em; cursor: pointer;
+  padding: 10px 16px 11px; margin-bottom: -1px;
+  background: none; border: 0; border-bottom: 3px solid transparent; border-radius: 0;
+  color: #5E6B78; font-size: 14px; font-weight: 600; letter-spacing: .005em; cursor: pointer;
   font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  text-shadow: 0 1px 1px rgba(0,0,0,.35);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(0,0,0,.25), 0 2px 4px rgba(15,30,50,.22);
-  opacity: .82; transition: transform .12s, box-shadow .12s, opacity .12s, filter .12s;
+  transition: color .12s, border-color .12s, background-color .12s;
 }
-.dash-tab-btn:hover { opacity: 1; filter: brightness(1.08); transform: translateY(-1px); }
-.dash-tab-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
-.dash-tab-btn.active {
-  opacity: 1; transform: translateY(1px);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.2), 0 0 0 2px #fff, 0 0 0 4px var(--tab);
-}
-#tabBtn-compliance  { --tab: #1F4E79; }
-#tabBtn-remediation { --tab: #0E7C86; }
-#tabBtn-kpi         { --tab: #6B4FA0; }
-#tabBtn-vendor      { --tab: #2E7D32; }
-#tabBtn-erd         { --tab: #B5542B; }
-#tabBtn-sysmap      { --tab: #8A2D5C; }
-@media (max-width:600px){ .dash-tabs { gap: 6px; padding: 8px 28px; margin: 0 -28px 14px; } .dash-tab-btn { padding: 7px 11px; font-size: 12px; } }
+.dash-tab-btn:hover { color: #1F4E79; background: #F4F7FA; }
+.dash-tab-btn:focus-visible { outline: 2px solid #93c5fd; outline-offset: -2px; }
+.dash-tab-btn.active { color: #1F4E79; border-bottom-color: #1F4E79; }
+@media (max-width:600px){ .dash-tabs { gap: 0; padding: 4px 16px 0; margin: 0 -28px 14px; } .dash-tab-btn { padding: 9px 10px 10px; font-size: 13px; } }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
