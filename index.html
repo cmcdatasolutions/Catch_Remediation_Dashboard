@@ -413,106 +413,123 @@
 .tab-panel.active { display: block; }
 
 
-/* ============ KPI Report tab (scoped under .viz-root) ============ */
-/* Shift the whole KPI report up exactly 0.5in (48px) from its default position:
-   0.5in = reclaiming the tab's own 20px top padding (viz-root's base padding-top)
-   + an 18px negative margin, plus 10px trimmed from the shared tab-bar's own
-   height above it (see .dash-tab-btn) so the report ends flush against the tab
-   bar with no visual overlap. */
-.viz-root.kpi-page { padding-top: 0; margin-top: -4px; }
-
-/* Title banner, styled after the reference KPI-overview layout */
-.viz-root .kpi-banner {
-  position: relative; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
-  padding: 22px 28px; margin-bottom: 16px; overflow: hidden;
-  box-shadow: 0 1px 3px rgba(31,78,121,.07), 0 1px 2px rgba(31,78,121,.04);
+/* ============ KPI Report tab (scoped under .viz-root.kpi-page) ============ */
+.viz-root.kpi-page {
+  --k-ink: #1B2733; --k-ink-2: #4A5866; --k-muted: #6B7785; --k-line: #E4E8ED; --k-track: #EEF1F4;
+  --k-navy: #1F4E79; --k-done: #2E7D5B; --k-pend: #C8901F; --k-inc: #C0533A;
+  padding-top: 0; margin-top: -4px; color: var(--k-ink);
 }
-.viz-root .kpi-banner-accent {
-  position: absolute; top: 0; right: 0; width: 240px; height: 100%;
-  background: linear-gradient(135deg, var(--series-1) 0%, #123a63 100%);
-  clip-path: polygon(100% 0, 100% 100%, 34% 100%, 62% 0);
-  opacity: .92;
-}
-.viz-root .kpi-banner-title {
-  font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 25px;
-  color: var(--text-primary); margin: 0 0 5px; position: relative; z-index: 1; letter-spacing: .01em;
-}
-.viz-root .kpi-banner-sub { font-size: 13px; color: var(--text-secondary); margin: 0; position: relative; z-index: 1; max-width: 620px; }
+.kpi-page .kpi-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 4px 2px 16px; border-bottom: 1px solid var(--k-line); margin-bottom: 16px; }
+.kpi-page .kpi-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--k-navy); margin-bottom: 4px; }
+.kpi-page .kpi-title { font-size: 24px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 4px; color: var(--k-ink); }
+.kpi-page .kpi-sub { font-size: 13px; color: var(--k-ink-2); margin: 0; }
+.kpi-page .kpi-meta { font-size: 12px; color: var(--k-muted); text-align: right; line-height: 1.6; }
+.kpi-page .kpi-meta strong { color: var(--k-ink-2); font-weight: 600; }
 
-/* Three-column layout: bar chart | pie chart | bar chart */
-.viz-root .kpi-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 16px; padding: 12px 16px; background: var(--surface-1); border: 1px solid var(--grid); border-radius: 10px; }
-.viz-root .kpi-filter-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); margin-right: 4px; }
-.viz-root .kpi-chip { font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--baseline); background: #fff; color: var(--text-primary); cursor: pointer; }
-.viz-root .kpi-chip:hover { border-color: #1F4E79; }
-.viz-root .kpi-chip.on { background: #1F4E79; border-color: #1F4E79; color: #fff; font-weight: 600; }
-.viz-root .kpi-chip .n { opacity: .7; margin-left: 4px; font-size: 12px; }
-.viz-root .kpi-filter-note { margin-left: auto; font-size: 12px; color: var(--text-muted); }
-.viz-root .kpi-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: stretch; }
-.viz-root .kpi-card {
-  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
-  padding: 16px 18px; display: flex; flex-direction: column;
-  box-shadow: 0 1px 3px rgba(31,78,121,.07), 0 1px 2px rgba(31,78,121,.04);
-}
-.viz-root .kpi-card.bar-card, .viz-root .kpi-card.pie-card, .viz-root .kpi-card.crit-card { min-height: 380px; }
-/* Pie card trimmed to a tighter bottom padding than the shared .kpi-card default
-   so the legend row sits closer to the card's own edge (matching the request to
-   remove whitespace under the pie specifically, without touching the bar card). */
-.viz-root .kpi-card.pie-card { padding-bottom: 6px; }
-.viz-root .kpi-card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-.viz-root .kpi-card-sub { font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px; }
-.viz-root .kpi-chart-body { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
-.viz-root .kpi-chart-body svg { width: 100%; height: 100%; overflow: visible; }
-/* Both bar-chart cards' chart boxes are pinned to a fixed aspect ratio (matches
-   the 460x370 viewBox drawn by kpiRenderGenericBarChart) instead of stretching
-   to fill whatever height the grid row resolves to. This makes each card's own
-   natural height fully deterministic and independent of the other cards'
-   sizing — needed so all three cards' bottom label rows line up without the
-   charts fighting over the shared grid row height. */
-.viz-root .kpi-card.bar-card .kpi-chart-body, .viz-root .kpi-card.crit-card .kpi-chart-body { flex: 0 0 auto; }
-.viz-root .kpi-card.bar-card .kpi-chart-body svg, .viz-root .kpi-card.crit-card .kpi-chart-body svg { height: auto; aspect-ratio: 460 / 370; }
-/* Pie chart nudged up 1/8in (12px) to sit flush under its subtitle, matching how
-   the bar chart's plot starts right under its own subtitle with no dead gap.
-   flex is capped to auto (not 1) and the svg is pinned to a 1:1 aspect ratio so
-   the chart-body never grows taller than it is wide — without this, freeing up
-   margin/padding elsewhere in the card just let this box stretch tall, and the
-   square viewBox's "meet" scaling re-centered with a much BIGGER empty band
-   above/below the circle, which is the opposite of removing whitespace. */
-.viz-root .kpi-card.pie-card .kpi-chart-body { margin-top: -0.125in; flex: 0 0 auto; }
-/* Sized down from a full-width circle so its legend row ("Completed / Pending /
-   Incomplete") lands at the same height as the bar chart's x-axis category
-   labels ("Total / Completed / Pending / Incomplete") one card over — lining
-   the two label rows up across the two cards. */
-.viz-root .kpi-card.pie-card .kpi-chart-body svg { height: auto; aspect-ratio: 1 / 1; max-width: 284px; margin: 0 auto; }
-/* Legend laid out as one evenly-spaced row (space-between, no wrap) so it reads
-   as a label band under the pie the same way the axis labels read under the bars.
-   margin-top pulled to 0 (was 12px) as part of closing up the gap beneath the
-   pie chart itself. */
-.viz-root .kpi-legend { display: flex; gap: 10px; flex-wrap: nowrap; justify-content: space-between; margin-top: 0; }
-.viz-root .kpi-legend .item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; }
-.viz-root .kpi-legend .swatch { width: 9px; height: 9px; border-radius: 3px; flex: none; }
-.viz-root .kpi-mark { cursor: default; }
-.viz-root .kpi-mark:hover { filter: brightness(0.93); }
-.viz-root .kpi-bar-mark { cursor: default; }
-.viz-root .kpi-axis-label { font-size: 11.5px; fill: var(--text-secondary); font-weight: 600; }
-.viz-root .kpi-value-label { font-size: 13px; fill: var(--text-primary); font-weight: 700; }
-.viz-root .kpi-wedge-label { font-size: 11.5px; fill: var(--text-primary); font-weight: 700; }
+.kpi-page .kpi-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 16px; }
+.kpi-page .kpi-filter-label { font-size: 12px; font-weight: 600; color: var(--k-muted); margin-right: 6px; }
+.kpi-page .kpi-chip { font: inherit; font-size: 12.5px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--k-line); background: #fff; color: var(--k-ink-2); cursor: pointer; }
+.kpi-page .kpi-chip:hover { border-color: #B8C4D0; color: var(--k-ink); }
+.kpi-page .kpi-chip.on { background: var(--k-navy); border-color: var(--k-navy); color: #fff; font-weight: 600; }
+.kpi-page .kpi-chip .n { opacity: .7; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-filter-note { margin-left: auto; font-size: 12px; color: var(--k-muted); }
 
-.viz-root .kpi-footnote { font-size: 12px; color: var(--text-muted); margin-top: 14px; line-height: 1.6; }
+.kpi-page .kpi-card { background: #fff; border: 1px solid var(--k-line); border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 2px rgba(27,39,51,.04); }
+.kpi-page .kpi-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.kpi-page .kpi-card-title { font-size: 14px; font-weight: 700; color: var(--k-ink); margin: 0; }
+.kpi-page .kpi-card-sub { font-size: 12px; color: var(--k-muted); margin: 2px 0 0; }
 
-.viz-root .kpi-tooltip {
-  position: fixed; pointer-events: none; z-index: 60;
-  background: var(--text-primary); color: var(--surface-1);
+/* Headline figures */
+.kpi-page .kpi-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-page .kpi-stat { padding: 16px 18px; }
+.kpi-page .kpi-stat-label { font-size: 12px; font-weight: 600; color: var(--k-muted); margin-bottom: 6px; }
+.kpi-page .kpi-stat-value { font-size: 28px; font-weight: 700; letter-spacing: -.01em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-stat-note { font-size: 12px; color: var(--k-ink-2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-stat-bar { height: 6px; border-radius: 3px; background: var(--k-track); margin-top: 10px; overflow: hidden; display: flex; }
+.kpi-page .kpi-stat-bar span { height: 100%; }
+
+/* Two-up row */
+.kpi-page .kpi-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+.kpi-page .kpi-row > *, .kpi-page .kpi-stats > * { min-width: 0; }
+
+/* Progress by category: 100% stacked bars */
+.kpi-page .kpi-prog { display: grid; grid-template-columns: minmax(110px, 150px) minmax(0, 1fr) 48px; gap: 14px 14px; align-items: center; }
+.kpi-page .kpi-prog-name { font-size: 13px; font-weight: 600; color: var(--k-ink); }
+.kpi-page .kpi-prog-name small { display: block; font-size: 11.5px; font-weight: 400; color: var(--k-muted); margin-top: 1px; }
+.kpi-page .kpi-prog-bar { display: flex; height: 24px; border-radius: 4px; overflow: hidden; background: var(--k-track); gap: 2px; }
+.kpi-page .kpi-prog-seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11.5px; font-weight: 600; min-width: 0; overflow: hidden; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-prog-pct { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-prog-total { border-top: 1px solid var(--k-line); padding-top: 14px; }
+.kpi-page .kpi-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; color: var(--k-ink-2); }
+.kpi-page .kpi-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.kpi-page .kpi-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex: none; }
+
+/* Cost donut */
+.kpi-page .kpi-donut-wrap { display: flex; align-items: center; gap: 20px; }
+.kpi-page .kpi-donut { width: 168px; flex: none; }
+.kpi-page .kpi-donut svg { width: 100%; height: auto; display: block; }
+.kpi-page .kpi-donut-total { font-size: 20px; font-weight: 700; fill: var(--k-ink); }
+.kpi-page .kpi-donut-cap { font-size: 10.5px; fill: var(--k-muted); }
+.kpi-page .kpi-ctable { width: auto; flex: 1; min-width: 0; border-collapse: collapse; font-size: 12.5px; }
+.kpi-page .kpi-ctable td { padding: 7px 0; border-bottom: 1px solid var(--k-line); font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-ctable tr:last-child td { border-bottom: 0; font-weight: 700; }
+.kpi-page .kpi-ctable td.num { text-align: right; padding-left: 10px; }
+.kpi-page .kpi-ctable td.pct { text-align: right; color: var(--k-muted); width: 44px; }
+
+/* Largest open items */
+.viz-root.kpi-page table.kpi-open, .viz-root.kpi-page table.kpi-ctable { min-width: 0; }
+.kpi-page .kpi-open { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.kpi-page .kpi-open th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--k-muted); padding: 0 10px 8px; border-bottom: 1px solid var(--k-line); }
+.kpi-page .kpi-open td { padding: 10px; border-bottom: 1px solid var(--k-line); vertical-align: middle; }
+.kpi-page .kpi-open tr:last-child td { border-bottom: 0; }
+.kpi-page .kpi-open .sn { width: 70px; color: var(--k-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kpi-page .kpi-open .act { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--k-ink); }
+.kpi-page .kpi-open .cat { width: 140px; color: var(--k-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-page .kpi-open .st { width: 104px; }
+.kpi-page .kpi-open .hrs { width: 64px; text-align: right; color: var(--k-ink-2); font-variant-numeric: tabular-nums; }
+.kpi-page .kpi-open .cost { width: 180px; }
+.kpi-page .kpi-open th.hrs, .kpi-page .kpi-open th.cost { text-align: right; }
+.kpi-page .kpi-costcell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.kpi-page .kpi-costcell .bar { flex: 1; height: 8px; background: var(--k-track); border-radius: 4px; overflow: hidden; max-width: 90px; }
+.kpi-page .kpi-costcell .bar span { display: block; height: 100%; background: var(--k-navy); border-radius: 4px; }
+.kpi-page .kpi-costcell b { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 54px; text-align: right; }
+.kpi-page .kpi-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.kpi-page .kpi-pill.Incomplete { background: #F8E7E2; color: #9B3F2B; }
+.kpi-page .kpi-pill.Pending { background: #F8EED9; color: #8A5F0D; }
+.kpi-page .kpi-pill.Completed { background: #E2F0E9; color: #23614A; }
+.kpi-page .kpi-note { font-size: 12px; color: var(--k-ink-2); background: #F6F8FA; border-radius: 6px; padding: 10px 12px; margin-top: 12px; }
+.kpi-page .kpi-empty { font-size: 13px; color: var(--k-muted); padding: 18px 0; text-align: center; }
+
+.kpi-page .kpi-footnote { font-size: 11.5px; color: var(--k-muted); margin-top: 14px; line-height: 1.6; }
+.kpi-page .kpi-tooltip {
+  position: fixed; pointer-events: none; z-index: 60; background: var(--k-ink); color: #fff;
   font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.18); display: none; white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18); display: none; white-space: nowrap;
 }
 
-@media (max-width: 900px) {
-  .viz-root .kpi-grid3 { grid-template-columns: 1fr; }
-  .viz-root .kpi-banner-accent { width: 140px; }
-  .viz-root .kpi-banner-title { font-size: 20px; }
+@media (max-width: 1100px) {
+  .kpi-page .kpi-stats { grid-template-columns: repeat(2, 1fr); }
+  .kpi-page .kpi-row { grid-template-columns: 1fr; }
+  .kpi-page .kpi-open .cat { display: none; }
 }
-@media (max-width: 480px) {
-  .viz-root .kpi-legend { flex-wrap: wrap; justify-content: center; gap: 12px 16px; }
+@media (max-width: 640px) {
+  .kpi-page .kpi-meta { text-align: left; }
+  .kpi-page .kpi-stat-value { font-size: 24px; }
+  .kpi-page .kpi-filter-note { margin-left: 0; width: 100%; }
+  .kpi-page .kpi-prog { grid-template-columns: 1fr 48px; }
+  .kpi-page .kpi-prog-name { grid-column: 1 / -1; margin-bottom: -8px; }
+  .kpi-page .kpi-donut-wrap { flex-direction: column; align-items: stretch; }
+  .kpi-page .kpi-donut { margin: 0 auto; }
+  .kpi-page .kpi-open .hrs, .kpi-page .kpi-open .sn { display: none; }
+  .kpi-page .kpi-open td.act { white-space: normal; font-size: 12.5px; line-height: 1.4; }
+  .kpi-page .kpi-open td.act span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .kpi-page .kpi-open td { padding: 8px 6px; }
+  .kpi-page .kpi-open .st { width: 92px; }
+  .kpi-page .kpi-open .cost { width: 76px; }
+  .kpi-page .kpi-costcell .bar { display: none; }
+}
+@media (max-width: 420px) {
+  .kpi-page .kpi-stats { grid-template-columns: 1fr; }
 }
 
 
@@ -1121,10 +1138,13 @@
   <div id="tabPanel-kpi" class="tab-panel">
     <div class="viz-root kpi-page">
 
-      <div class="kpi-banner">
-        <div class="kpi-banner-accent" aria-hidden="true"></div>
-        <h2 class="kpi-banner-title">Key Performance Indicators Overview</h2>
-        <p class="kpi-banner-sub">Remediation Tracker — item status, cost distribution, and health at a glance</p>
+      <div class="kpi-head">
+        <div>
+          <div class="kpi-eyebrow">Remediation Tracker</div>
+          <h2 class="kpi-title">KPI Report</h2>
+          <p class="kpi-sub">Progress, estimated cost and the largest open items across all remediation work.</p>
+        </div>
+        <div class="kpi-meta" id="kpiMeta"></div>
       </div>
 
       <div class="kpi-filter" id="kpiFilter" role="group" aria-label="Filter KPIs by category">
@@ -1133,32 +1153,32 @@
         <span class="kpi-filter-note" id="kpiFilterNote"></span>
       </div>
 
-      <div class="kpi-grid3">
+      <div class="kpi-stats" id="kpiStats"></div>
 
-        <div class="kpi-card bar-card">
-          <div class="kpi-card-title">Item Status Overview</div>
-          <div class="kpi-card-sub">Total, Completed, Pending, and Incomplete items</div>
-          <div class="kpi-chart-body" id="kpiBarChart"></div>
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card-head"><div><h3 class="kpi-card-title">Progress by category</h3><p class="kpi-card-sub">Items by status</p></div></div>
+          <div id="kpiProgress"></div>
+          <div class="kpi-legend">
+            <span><i class="kpi-sw" style="background:var(--k-done)"></i>Completed</span>
+            <span><i class="kpi-sw" style="background:var(--k-pend)"></i>Pending</span>
+            <span><i class="kpi-sw" style="background:var(--k-inc)"></i>Incomplete</span>
+          </div>
         </div>
-
-        <div class="kpi-card pie-card">
-          <div class="kpi-card-title">Cost Distribution by Status</div>
-          <div class="kpi-card-sub" id="kpiPieSub">Estimated cost across categories</div>
-          <div class="kpi-chart-body" id="kpiPieChart"></div>
-          <div class="kpi-legend" id="kpiPieLegend"></div>
+        <div class="kpi-card">
+          <div class="kpi-card-head"><div><h3 class="kpi-card-title">Estimated cost by status</h3><p class="kpi-card-sub" id="kpiCostSub">Estimated effort cost</p></div></div>
+          <div id="kpiCost"></div>
         </div>
-
-        <div class="kpi-card crit-card">
-          <div class="kpi-card-title">Critical Update Tracker</div>
-          <div class="kpi-card-sub">Incomplete items, unmitigated risks, and open dependencies</div>
-          <div class="kpi-chart-body" id="kpiCritChart"></div>
-        </div>
-
       </div>
 
-      <p class="kpi-footnote">Live data from the Remediation Tracker — figures update automatically as item status and cost estimates change.</p>
+      <div class="kpi-card">
+        <div class="kpi-card-head"><div><h3 class="kpi-card-title">Largest open items</h3><p class="kpi-card-sub" id="kpiOpenSub">Pending and incomplete items, by estimated cost</p></div></div>
+        <div id="kpiOpen"></div>
+      </div>
+
+      <p class="kpi-footnote">Source: Remediation Tracker, live. Open items are Pending or Incomplete. Estimated cost comes from each item's cost estimate. An open risk is a risk note not marked "Mitigated"; an open dependency is a dependency note that doesn't start with "None".</p>
+      <div class="kpi-tooltip" id="kpiTooltip"></div>
     </div>
-    <div class="kpi-tooltip" id="kpiTooltip"></div>
 
   </div><!-- /tabPanel-kpi -->
 
@@ -3300,177 +3320,159 @@ function kpiSvgEl(tag, attrs) {
   return el;
 }
 
-// ---------- Shared vertical bar chart renderer ----------
-// Both bar-chart cards (Item Status Overview and Critical Update Tracker) draw
-// through this one function with the SAME fixed viewBox, so their x-axis label
-// rows land at an identical height across cards without any extra alignment
-// tuning — see the "line up the legend with the bar labels" fix for why a
-// shared, fixed geometry (rather than each chart measuring its own container)
-// is what keeps these rows in sync.
-function kpiRenderGenericBarChart(hostId, bars) {
-  // Fixed viewBox aspect ratio (matches the CSS aspect-ratio set on these
-  // cards' svg — see .kpi-card.bar-card/.crit-card .kpi-chart-body svg). This
-  // used to be measured from the container's live bounding rect, but that
-  // rect's height was itself a product of CSS Grid's align-items:stretch
-  // across all three KPI columns — meaning an edit to one chart's size could
-  // silently reshuffle another's proportions. Fixing this to a constant
-  // removes that circular dependency so each chart's size only ever depends
-  // on its own CSS.
-  const W = 460, H = 370;
-  const plotTop = 26, plotBottom = H - 56, plotLeft = 44, plotRight = 440;
-  const maxVal = Math.max(1, ...bars.map(b => b.value));
-  const niceMax = Math.ceil(maxVal / 10) * 10 || 10;
-
-  const bandW = (plotRight - plotLeft) / bars.length;
-  const barW = Math.min(56, bandW * 0.46);
-  const yFor = v => plotBottom - (v / niceMax) * (plotBottom - plotTop);
-
-  const svg = kpiSvgEl('svg', { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet' });
-
-  // gridlines (0, 25%, 50%, 75%, 100% of niceMax)
-  for (let f = 0; f <= 1.0001; f += 0.25) {
-    const y = plotBottom - f * (plotBottom - plotTop);
-    svg.appendChild(kpiSvgEl('line', { x1: plotLeft, x2: plotRight, y1: y, y2: y, stroke: 'var(--grid)', 'stroke-width': 1 }));
-    const gl = kpiSvgEl('text', { x: plotLeft - 8, y: y + 4, 'text-anchor': 'end', class: 'kpi-axis-label' });
-    gl.textContent = Math.round(f * niceMax);
-    svg.appendChild(gl);
-  }
-
-  bars.forEach((b, i) => {
-    const cx = plotLeft + bandW * (i + 0.5);
-    const x = cx - barW / 2;
-    const y = yFor(b.value);
-    const h = Math.max(0, plotBottom - y);
-    const g = kpiSvgEl('g', {});
-    const rect = kpiSvgEl('rect', { x, y, width: barW, height: h, rx: 3, ry: 3, fill: b.color, class: 'kpi-mark kpi-bar-mark' });
-    rect.addEventListener('mouseenter', e => kpiShowTooltip(e, `${b.label}: ${b.value} item${b.value === 1 ? '' : 's'}`));
-    rect.addEventListener('mousemove', kpiMoveTooltip);
-    rect.addEventListener('mouseleave', kpiHideTooltip);
-    g.appendChild(rect);
-
-    const valLabel = kpiSvgEl('text', { x: cx, y: y - 10, 'text-anchor': 'middle', class: 'kpi-value-label' });
-    valLabel.textContent = b.value;
-    g.appendChild(valLabel);
-
-    const xLabel = kpiSvgEl('text', { x: cx, y: plotBottom + 22, 'text-anchor': 'middle', class: 'kpi-axis-label' });
-    xLabel.textContent = b.label;
-    g.appendChild(xLabel);
-
-    svg.appendChild(g);
-  });
-
-  svg.appendChild(kpiSvgEl('line', { x1: plotLeft, x2: plotRight, y1: plotBottom, y2: plotBottom, stroke: 'var(--baseline)', 'stroke-width': 1 }));
-
-  const hostEl = document.getElementById(hostId);
-  hostEl.innerHTML = '';
-  hostEl.appendChild(svg);
-}
-
-// ---------- Bar chart: item status counts ----------
-function kpiRenderBarChart() {
-  const { total, completed, pending, incomplete } = kpiComputeStats();
-  kpiRenderGenericBarChart('kpiBarChart', [
-    { label: 'Total', value: total, color: 'var(--series-1)' },
-    { label: 'Completed', value: completed, color: 'var(--status-good)' },
-    { label: 'Pending', value: pending, color: 'var(--status-warning)' },
-    { label: 'Incomplete', value: incomplete, color: 'var(--status-serious)' },
-  ]);
-}
-
-// ---------- Bar chart: Critical Update Tracker ----------
-// Incomplete = open items (status). Risk = items whose risk note isn't marked
-// "Mitigated" yet. Dependency = items whose dependency note doesn't start
-// with "None" (i.e. still blocked on something else).
-function kpiRenderCritChart() {
-  const { incomplete, riskCount, dependencyCount } = kpiComputeStats();
-  kpiRenderGenericBarChart('kpiCritChart', [
-    { label: 'Incomplete', value: incomplete, color: 'var(--status-serious)' },
-    { label: 'Risk', value: riskCount, color: 'var(--status-critical)' },
-    { label: 'Dependencies', value: dependencyCount, color: 'var(--status-warning)' },
-  ]);
-}
-
-// ---------- Pie chart: estimated cost by item status, in dollars ----------
-function kpiPolarToXY(cx, cy, r, angleDeg) {
-  const a = (angleDeg - 90) * Math.PI / 180;
-  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-}
-
+// ---------- KPI Report helpers ----------
 const KPI_STATUS_ORDER = ['Completed', 'Pending', 'Incomplete'];
-const KPI_STATUS_COLOR = { Completed: 'var(--status-good)', Pending: 'var(--status-warning)', Incomplete: 'var(--status-serious)' };
-
-function kpiRenderPieChart() {
-  const { costByStatus, totalCost } = kpiComputeStats();
-  // r=117 (was 90, then 104) keeps trimming the pie's built-in margin on every
-  // side, closing up more of the white space that sat below (and around) the
-  // circle before the legend. 3 units of margin are kept so the 2px wedge
-  // stroke isn't clipped at the viewBox edge.
-  const W = 240, H = 240, cx = 120, cy = 120, r = 117;
-  const svg = kpiSvgEl('svg', { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet' });
-  if (!totalCost) {
-    document.getElementById('kpiPieLegend').innerHTML = '';
-    document.getElementById('kpiPieChart').innerHTML =
-      '<div style="height:100%;min-height:200px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text-muted);font-size:14px;padding:0 16px">No cost recorded for the selected categories ($0).</div>';
-    const subEl = document.getElementById('kpiPieSub');
-    if (subEl) subEl.textContent = 'Estimated cost by item status — $0 total';
-    return;
-  }
-
-  let angle = 0;
-  const legendHost = document.getElementById('kpiPieLegend');
-  legendHost.innerHTML = '';
-
-  KPI_STATUS_ORDER.forEach((status) => {
-    const cost = costByStatus[status] || 0;
-    const pct = totalCost ? cost / totalCost : 0;
-    const sweep = pct * 360;
-    const gapDeg = 1.2;
-    const startA = angle + gapDeg / 2;
-    const endA = angle + sweep - gapDeg / 2;
-    const [x1, y1] = kpiPolarToXY(cx, cy, r, startA);
-    const [x2, y2] = kpiPolarToXY(cx, cy, r, endA);
-    const largeArc = (endA - startA) > 180 ? 1 : 0;
-    const color = KPI_STATUS_COLOR[status];
-    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-
-    const path = kpiSvgEl('path', { d, fill: color, stroke: 'var(--surface-1)', 'stroke-width': 2, class: 'kpi-mark' });
-    path.addEventListener('mouseenter', e => kpiShowTooltip(e, `${status}: ${kpiFmtCost(cost)}`));
-    path.addEventListener('mousemove', kpiMoveTooltip);
-    path.addEventListener('mouseleave', kpiHideTooltip);
-    svg.appendChild(path);
-
-    if (sweep > 14) {
-      const midA = angle + sweep / 2;
-      const [lx, ly] = kpiPolarToXY(cx, cy, r * 0.62, midA);
-      const label = kpiSvgEl('text', { x: lx, y: ly + 4, 'text-anchor': 'middle', class: 'kpi-wedge-label' });
-      label.textContent = kpiFmtCost(cost);
-      svg.appendChild(label);
-    }
-
-    const item = document.createElement('div');
-    item.className = 'item';
-    item.innerHTML = `<span class="swatch" style="background:${color}"></span><span>${kpiEscapeHtml(status)} — ${kpiFmtCost(cost)}</span>`;
-    legendHost.appendChild(item);
-
-    angle += sweep;
-  });
-
-  const host = document.getElementById('kpiPieChart');
-  host.innerHTML = '';
-  host.appendChild(svg);
-
-  const subEl = document.getElementById('kpiPieSub');
-  if (subEl) subEl.textContent = `Estimated cost by item status — ${kpiFmtCost(totalCost)} total`;
-}
-
-// ---------- Stat tiles: quick-glance health indicators ----------
-// The up/down arrow reflects whether the metric is currently healthy or needs
-// attention — not a fabricated trend, since the tracker keeps no historical
-// snapshots to compute a real change-over-time figure against.
+const KPI_STATUS_COLOR = { Completed: 'var(--k-done)', Pending: 'var(--k-pend)', Incomplete: 'var(--k-inc)' };
+function kpiHours(it) { const m = String(it.duration || '').match(/([\d.]+)\s*(hour|hr|minute|min)/i); if (!m) return 0; return /^m/i.test(m[2]) ? Number(m[1]) / 60 : Number(m[1]); }
+function kpiPct(n, d) { return d ? Math.round(n / d * 100) : 0; }
+function kpiIsOpen(it) { return it.status === 'Incomplete' || it.status === 'Pending'; }
 function kpiEscapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str == null ? '' : str;
   return div.innerHTML;
+}
+function kpiTip(el, text) {
+  el.addEventListener('mouseenter', e => kpiShowTooltip(e, text));
+  el.addEventListener('mousemove', kpiMoveTooltip);
+  el.addEventListener('mouseleave', kpiHideTooltip);
+}
+
+// ---------- Header meta: item count and as-of date ----------
+function kpiRenderMeta() {
+  const el = document.getElementById('kpiMeta');
+  if (!el) return;
+  const d = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  el.innerHTML = `<strong>${REM_ITEMS.length} tracked items</strong><br>As of ${d}`;
+}
+
+// ---------- Headline figures ----------
+function kpiRenderStats() {
+  const s = kpiComputeStats();
+  const open = s.pending + s.incomplete;
+  const openCost = s.costByStatus.Pending + s.costByStatus.Incomplete;
+  const openHours = kpiFilteredItems().filter(kpiIsOpen).reduce((a, it) => a + kpiHours(it), 0);
+  const done = kpiPct(s.completed, s.total);
+  const seg = (n, color) => s.total ? `<span style="width:${n / s.total * 100}%;background:${color}"></span>` : '';
+  const tiles = [
+    { label: 'Completion', value: `${done}%`, note: `${s.completed} of ${s.total} items completed`,
+      bar: seg(s.completed, 'var(--k-done)') + seg(s.pending, 'var(--k-pend)') + seg(s.incomplete, 'var(--k-inc)') },
+    { label: 'Open items', value: open, note: `${s.incomplete} incomplete · ${s.pending} pending` },
+    { label: 'Remaining estimated cost', value: kpiFmtCost(openCost), note: `${kpiPct(openCost, s.totalCost)}% of ${kpiFmtCost(s.totalCost)} total` },
+    { label: 'Remaining effort', value: `${Math.round(openHours)} hrs`, note: `Across ${open} open item${open === 1 ? '' : 's'}` },
+  ];
+  document.getElementById('kpiStats').innerHTML = tiles.map(t => `
+    <div class="kpi-card kpi-stat">
+      <div class="kpi-stat-label">${t.label}</div>
+      <div class="kpi-stat-value">${t.value}</div>
+      <div class="kpi-stat-note">${t.note}</div>
+      ${t.bar ? `<div class="kpi-stat-bar">${t.bar}</div>` : ''}
+    </div>`).join('');
+}
+
+// ---------- Progress by category: one 100% stacked bar per category ----------
+function kpiRenderProgress() {
+  const items = kpiFilteredItems();
+  const groups = {};
+  items.forEach(it => { const c = kpiCategoryOf(it); (groups[c] = groups[c] || []).push(it); });
+  const rows = Object.keys(groups).sort().map(c => ({ name: c, items: groups[c] }));
+  if (rows.length > 1) rows.push({ name: 'All categories', items, total: true });
+  const host = document.getElementById('kpiProgress');
+  if (!items.length) { host.innerHTML = '<div class="kpi-empty">No items in the selected categories.</div>'; return; }
+  host.innerHTML = '';
+  const grid = document.createElement('div'); grid.className = 'kpi-prog';
+  rows.forEach(r => {
+    const n = r.items.length;
+    const cnt = st => r.items.filter(i => i.status === st).length;
+    const cls = r.total ? ' kpi-prog-total' : '';
+    const name = document.createElement('div'); name.className = 'kpi-prog-name' + cls;
+    name.innerHTML = `${kpiEscapeHtml(r.name)}<small>${n} item${n === 1 ? '' : 's'}</small>`;
+    const bar = document.createElement('div'); bar.className = 'kpi-prog-bar';
+    const barWrap = document.createElement('div'); barWrap.className = cls.trim(); barWrap.appendChild(bar);
+    KPI_STATUS_ORDER.forEach(st => {
+      const k = cnt(st); if (!k) return;
+      const seg = document.createElement('div'); seg.className = 'kpi-prog-seg';
+      seg.style.width = (k / n * 100) + '%'; seg.style.background = KPI_STATUS_COLOR[st];
+      if (k / n >= 0.08) seg.textContent = k;
+      kpiTip(seg, `${r.name} · ${st}: ${k} of ${n} (${kpiPct(k, n)}%)`);
+      bar.appendChild(seg);
+    });
+    const pct = document.createElement('div'); pct.className = 'kpi-prog-pct' + cls;
+    pct.textContent = kpiPct(cnt('Completed'), n) + '%';
+    pct.title = 'Completed';
+    grid.append(name, barWrap, pct);
+  });
+  host.appendChild(grid);
+}
+
+// ---------- Estimated cost by status: donut + table ----------
+function kpiPolarToXY(cx, cy, r, angleDeg) {
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+function kpiRenderCost() {
+  const { costByStatus, totalCost } = kpiComputeStats();
+  const host = document.getElementById('kpiCost');
+  document.getElementById('kpiCostSub').textContent = `${kpiFmtCost(totalCost)} estimated in total`;
+  if (!totalCost) { host.innerHTML = '<div class="kpi-empty">No cost recorded for the selected categories.</div>'; return; }
+  const S = 200, c = 100, r = 84, w = 26;
+  const svg = kpiSvgEl('svg', { viewBox: `0 0 ${S} ${S}`, role: 'img', 'aria-label': 'Estimated cost by status' });
+  svg.appendChild(kpiSvgEl('circle', { cx: c, cy: c, r, fill: 'none', stroke: 'var(--k-track)', 'stroke-width': w }));
+  let angle = 0;
+  KPI_STATUS_ORDER.forEach(st => {
+    const v = costByStatus[st] || 0; if (!v) return;
+    const sweep = v / totalCost * 360;
+    const gap = sweep < 359 ? 1.5 : 0;
+    const a0 = angle + gap / 2, a1 = angle + sweep - gap / 2;
+    const [x1, y1] = kpiPolarToXY(c, c, r, a0), [x2, y2] = kpiPolarToXY(c, c, r, Math.min(a1, a0 + 359.99));
+    const path = kpiSvgEl('path', { d: `M ${x1} ${y1} A ${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x2} ${y2}`, fill: 'none', stroke: KPI_STATUS_COLOR[st], 'stroke-width': w, class: 'kpi-mark' });
+    kpiTip(path, `${st}: ${kpiFmtCost(v)} (${kpiPct(v, totalCost)}%)`);
+    svg.appendChild(path);
+    angle += sweep;
+  });
+  const t1 = kpiSvgEl('text', { x: c, y: c + 2, 'text-anchor': 'middle', class: 'kpi-donut-total' }); t1.textContent = kpiFmtCost(totalCost);
+  const t2 = kpiSvgEl('text', { x: c, y: c + 20, 'text-anchor': 'middle', class: 'kpi-donut-cap' }); t2.textContent = 'total estimated';
+  svg.append(t1, t2);
+  const rows = KPI_STATUS_ORDER.map(st => {
+    const v = costByStatus[st] || 0;
+    return `<tr><td><span style="display:inline-flex;align-items:center;gap:8px"><i class="kpi-sw" style="background:${KPI_STATUS_COLOR[st]}"></i>${st}</span></td><td class="num">${kpiFmtCost(v)}</td><td class="pct">${kpiPct(v, totalCost)}%</td></tr>`;
+  }).join('');
+  host.innerHTML = `<div class="kpi-donut-wrap"><div class="kpi-donut"></div>
+    <table class="kpi-ctable">${rows}<tr><td>Total</td><td class="num">${kpiFmtCost(totalCost)}</td><td class="pct">100%</td></tr></table></div>`;
+  host.querySelector('.kpi-donut').appendChild(svg);
+}
+
+// ---------- Largest open items ----------
+function kpiRenderOpen() {
+  const s = kpiComputeStats();
+  const open = kpiFilteredItems().filter(kpiIsOpen).sort((a, b) => (Number(b.cost) || 0) - (Number(a.cost) || 0));
+  const top = open.slice(0, 8);
+  const host = document.getElementById('kpiOpen');
+  document.getElementById('kpiOpenSub').textContent = open.length > top.length
+    ? `Top ${top.length} of ${open.length} pending and incomplete items, by estimated cost`
+    : `${open.length} pending and incomplete item${open.length === 1 ? '' : 's'}, by estimated cost`;
+  if (!open.length) { host.innerHTML = '<div class="kpi-empty">No open items in the selected categories.</div>'; return; }
+  const max = Math.max(1, ...top.map(i => Number(i.cost) || 0));
+  const rows = top.map(it => {
+    const cost = Number(it.cost) || 0, hrs = kpiHours(it);
+    return `<tr>
+      <td class="sn">${kpiEscapeHtml(it.sn)}</td>
+      <td class="act" title="${kpiEscapeHtml(it.action)}"><span>${kpiEscapeHtml(it.action)}</span></td>
+      <td class="cat">${kpiEscapeHtml(kpiCategoryOf(it))}</td>
+      <td class="st"><span class="kpi-pill ${kpiEscapeHtml(it.status)}">${kpiEscapeHtml(it.status)}</span></td>
+      <td class="hrs">${hrs ? (Math.round(hrs * 10) / 10) + ' h' : '—'}</td>
+      <td class="cost"><div class="kpi-costcell"><div class="bar"><span style="width:${cost / max * 100}%"></span></div><b>${kpiFmtCost(cost)}</b></div></td>
+    </tr>`;
+  }).join('');
+  const shown = top.reduce((a, it) => a + (Number(it.cost) || 0), 0);
+  const openCost = s.costByStatus.Pending + s.costByStatus.Incomplete;
+  const n = open.length;
+  const riskNote = s.riskCount === n && s.dependencyCount === n
+    ? `All ${n} open items still carry an open risk and an open dependency.`
+    : `${s.riskCount} of ${n} open items carry an open risk; ${s.dependencyCount} have an open dependency.`;
+  host.innerHTML = `<table class="kpi-open">
+      <thead><tr><th class="sn">Item</th><th>Action</th><th class="cat">Category</th><th class="st">Status</th><th class="hrs">Effort</th><th class="cost">Est. cost</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    <div class="kpi-note">These ${top.length} items account for ${kpiFmtCost(shown)} (${kpiPct(shown, openCost)}%) of the ${kpiFmtCost(openCost)} remaining. ${riskNote}</div>`;
 }
 
 // ---------- Category filter (multi-select chips; none selected = All) ----------
@@ -3511,14 +3513,13 @@ function kpiRenderFilter() {
 }
 
 function kpiRenderAll() {
+  kpiRenderMeta();
   kpiRenderFilter();
-  kpiRenderBarChart();
-  kpiRenderPieChart();
-  kpiRenderCritChart();
+  kpiRenderStats();
+  kpiRenderProgress();
+  kpiRenderCost();
+  kpiRenderOpen();
 }
-
-// (The bar chart's viewBox is now a fixed aspect ratio — see kpiRenderBarChart —
-// so it no longer needs to re-fit itself on resize.)
 
 kpiRenderAll();
 </script>
