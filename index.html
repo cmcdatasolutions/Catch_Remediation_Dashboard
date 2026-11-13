@@ -3476,6 +3476,7 @@ function kpiRenderFilter() {
   REM_ITEMS.forEach(it => { const c = kpiCategoryOf(it); counts[c] = (counts[c] || 0) + 1; });
   const cats = Object.keys(counts).sort();
   for (const c of [...kpiCatFilter]) if (!counts[c]) kpiCatFilter.delete(c);   // category no longer exists
+  if (kpiCatFilter.size > 1) kpiCatFilter = new Set([[...kpiCatFilter].sort()[0]]);   // older saved multi-picks
   const host = document.getElementById('kpiFilterChips');
   if (!host) return;
   host.innerHTML = '';
@@ -3489,15 +3490,18 @@ function kpiRenderFilter() {
     host.appendChild(b);
   };
   chip('All', REM_ITEMS.length, kpiCatFilter.size === 0, () => { kpiCatFilter.clear(); kpiSaveFilter(); kpiRenderAll(); });
+  // One category at a time: picking a category replaces the previous one;
+  // clicking the selected category again goes back to All.
   cats.forEach(c => chip(c, counts[c], kpiCatFilter.has(c), () => {
-    if (kpiCatFilter.has(c)) kpiCatFilter.delete(c); else kpiCatFilter.add(c);
-    if (kpiCatFilter.size === cats.length) kpiCatFilter.clear();     // everything picked = All
+    const wasOn = kpiCatFilter.has(c);
+    kpiCatFilter.clear();
+    if (!wasOn) kpiCatFilter.add(c);
     kpiSaveFilter(); kpiRenderAll();
   }));
   const shown = kpiFilteredItems().length;
   document.getElementById('kpiFilterNote').textContent = kpiCatFilter.size
-    ? `Showing ${shown} of ${REM_ITEMS.length} items · ${[...kpiCatFilter].sort().join(', ')}`
-    : `Showing all ${REM_ITEMS.length} items · click categories to combine`;
+    ? `Showing ${shown} of ${REM_ITEMS.length} items · ${[...kpiCatFilter][0]}`
+    : `Showing all ${REM_ITEMS.length} items · click a category to filter`;
 }
 
 function kpiRenderAll() {
